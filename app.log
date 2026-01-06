@@ -1,0 +1,166 @@
+
+  .   ____          _            __ _ _
+ /\\ / ___'_ __ _ _(_)_ __  __ _ \ \ \ \
+( ( )\___ | '_ | '_| | '_ \/ _` | \ \ \ \
+ \\/  ___)| |_)| | | | | || (_| |  ) ) ) )
+  '  |____| .__|_| |_|_| |_\__, | / / / /
+ =========|_|==============|___/=/_/_/_/
+ :: Spring Boot ::                (v3.2.0)
+
+22:17:07.584 [main] INFO  c.example.kafka.KafkaDemoApplication - Starting KafkaDemoApplication using Java 17.0.17 with PID 939552 (/home/igusa/java/target/classes started by igusa in /home/igusa/java)
+22:17:07.585 [main] DEBUG c.example.kafka.KafkaDemoApplication - Running with Spring Boot v3.2.0, Spring v6.1.1
+22:17:07.586 [main] INFO  c.example.kafka.KafkaDemoApplication - The following 1 profile is active: "mysql"
+22:17:08.040 [main] INFO  o.s.d.r.c.RepositoryConfigurationDelegate - Bootstrapping Spring Data JPA repositories in DEFAULT mode.
+22:17:08.095 [main] INFO  o.s.d.r.c.RepositoryConfigurationDelegate - Finished Spring Data repository scanning in 47 ms. Found 4 JPA repository interfaces.
+22:17:08.561 [main] INFO  o.s.b.w.e.tomcat.TomcatWebServer - Tomcat initialized with port 8080 (http)
+22:17:08.570 [main] INFO  o.a.catalina.core.StandardService - Starting service [Tomcat]
+22:17:08.570 [main] INFO  o.a.catalina.core.StandardEngine - Starting Servlet engine: [Apache Tomcat/10.1.16]
+22:17:08.649 [main] INFO  o.a.c.c.C.[Tomcat].[localhost].[/] - Initializing Spring embedded WebApplicationContext
+22:17:08.649 [main] INFO  o.s.b.w.s.c.ServletWebServerApplicationContext - Root WebApplicationContext: initialization completed in 1029 ms
+22:17:08.776 [main] INFO  o.h.jpa.internal.util.LogHelper - HHH000204: Processing PersistenceUnitInfo [name: default]
+22:17:08.837 [main] INFO  org.hibernate.Version - HHH000412: Hibernate ORM core version 6.3.1.Final
+22:17:08.868 [main] INFO  o.h.c.i.RegionFactoryInitiator - HHH000026: Second-level cache disabled
+22:17:09.085 [main] INFO  o.s.o.j.p.SpringPersistenceUnitInfo - No LoadTimeWeaver setup: ignoring JPA class transformer
+22:17:09.107 [main] INFO  com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Starting...
+22:17:09.409 [main] INFO  com.zaxxer.hikari.pool.HikariPool - HikariPool-1 - Added connection com.mysql.cj.jdbc.ConnectionImpl@1e0294a7
+22:17:09.410 [main] INFO  com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Start completed.
+22:17:09.442 [main] WARN  org.hibernate.orm.deprecation - HHH90000025: MySQL8Dialect does not need to be specified explicitly using 'hibernate.dialect' (remove the property setting and it will be selected by default)
+22:17:09.443 [main] WARN  org.hibernate.orm.deprecation - HHH90000026: MySQL8Dialect has been deprecated; use org.hibernate.dialect.MySQLDialect instead
+22:17:10.028 [main] INFO  o.h.e.t.j.p.i.JtaPlatformInitiator - HHH000489: No JTA platform available (set 'hibernate.transaction.jta.platform' to enable JTA platform integration)
+22:17:10.152 [main] INFO  o.s.o.j.LocalContainerEntityManagerFactoryBean - Initialized JPA EntityManagerFactory for persistence unit 'default'
+22:17:10.346 [main] INFO  o.s.d.j.r.query.QueryEnhancerFactory - Hibernate is in classpath; If applicable, HQL parser will be used.
+22:17:10.699 [main] INFO  c.e.kafka.datasource.FileDataSource - 初始化文件数据源:
+22:17:10.699 [main] INFO  c.e.kafka.datasource.FileDataSource -   TUBE路径: /home/igusa/java/data/TUBE
+22:17:10.700 [main] INFO  c.e.kafka.datasource.FileDataSource -   日志路径: /home/igusa/java/data/TUBE_logs
+22:17:10.700 [main] INFO  c.e.kafka.datasource.FileDataSource -   PLC路径: /home/igusa/java/data/PLC_logs
+22:17:10.700 [main] INFO  c.e.kafka.datasource.FileDataSource -   通道元数据: /home/igusa/java/channels
+22:17:10.700 [main] INFO  c.e.k.datasource.NetworkDataSource - 初始化网络数据源 (Kafka)
+22:17:10.700 [main] INFO  c.example.kafka.service.DataService - 数据服务初始化完成 - 主数据源: file, 启用备用: true
+22:17:11.027 [main] WARN  o.s.b.a.o.j.JpaBaseConfiguration$JpaWebConfiguration - spring.jpa.open-in-view is enabled by default. Therefore, database queries may be performed during view rendering. Explicitly configure spring.jpa.open-in-view to disable this warning
+22:17:11.073 [main] INFO  o.s.b.a.w.s.WelcomePageHandlerMapping - Adding welcome page: class path resource [static/index.html]
+22:17:11.692 [main] INFO  o.s.b.w.e.tomcat.TomcatWebServer - Tomcat started on port 8080 (http) with context path ''
+22:17:11.738 [main] INFO  o.s.k.c.DefaultKafkaConsumerFactory$ExtendedKafkaConsumer - [Consumer clientId=consumer-data-consumer-group-1, groupId=data-consumer-group] Subscribed to topic(s): operation-log
+22:17:11.743 [main] INFO  o.s.k.c.DefaultKafkaConsumerFactory$ExtendedKafkaConsumer - [Consumer clientId=consumer-data-consumer-group-2, groupId=data-consumer-group] Subscribed to topic(s): plc-interlock
+22:17:11.747 [main] INFO  o.s.k.c.DefaultKafkaConsumerFactory$ExtendedKafkaConsumer - [Consumer clientId=consumer-demo-consumer-group-3, groupId=demo-consumer-group] Subscribed to topic(s): demo-topic
+22:17:11.751 [main] INFO  o.s.k.c.DefaultKafkaConsumerFactory$ExtendedKafkaConsumer - [Consumer clientId=consumer-data-consumer-group-4, groupId=data-consumer-group] Subscribed to topic(s): operation-log
+22:17:11.756 [main] INFO  o.s.k.c.DefaultKafkaConsumerFactory$ExtendedKafkaConsumer - [Consumer clientId=consumer-data-consumer-group-5, groupId=data-consumer-group] Subscribed to topic(s): plc-interlock
+22:17:11.760 [main] INFO  o.s.k.c.DefaultKafkaConsumerFactory$ExtendedKafkaConsumer - [Consumer clientId=consumer-data-consumer-group-6, groupId=data-consumer-group] Subscribed to topic(s): shot-metadata
+22:17:11.771 [main] INFO  o.s.k.c.DefaultKafkaConsumerFactory$ExtendedKafkaConsumer - [Consumer clientId=consumer-data-consumer-group-7, groupId=data-consumer-group] Subscribed to topic(s): wave-data
+22:17:11.774 [main] INFO  o.s.k.c.DefaultKafkaConsumerFactory$ExtendedKafkaConsumer - [Consumer clientId=consumer-data-consumer-group-8, groupId=data-consumer-group] Subscribed to topic(s): shot-metadata
+22:17:11.777 [main] INFO  o.s.k.c.DefaultKafkaConsumerFactory$ExtendedKafkaConsumer - [Consumer clientId=consumer-data-consumer-group-9, groupId=data-consumer-group] Subscribed to topic(s): wave-data
+22:17:11.779 [main] INFO  o.s.m.s.b.SimpleBrokerMessageHandler - Starting...
+22:17:11.780 [main] INFO  o.s.m.s.b.SimpleBrokerMessageHandler - BrokerAvailabilityEvent[available=true, SimpleBrokerMessageHandler [org.springframework.messaging.simp.broker.DefaultSubscriptionRegistry@65f68e96]]
+22:17:11.781 [main] INFO  o.s.m.s.b.SimpleBrokerMessageHandler - Started.
+22:17:11.787 [main] INFO  c.example.kafka.KafkaDemoApplication - Started KafkaDemoApplication in 4.461 seconds (process running for 4.696)
+========================================
+Kafka Demo 应用已启动！
+访问: http://localhost:8080/api/kafka/send?message=Hello
+========================================
+22:17:11.794 [org.springframework.kafka.KafkaListenerEndpointContainer#8-0-C-1] INFO  o.s.k.l.KafkaMessageListenerContainer - demo-consumer-group: partitions assigned: [demo-topic-0, demo-topic-1, demo-topic-2]
+22:17:11.801 [org.springframework.kafka.KafkaListenerEndpointContainer#2-0-C-1] INFO  o.s.k.l.KafkaMessageListenerContainer - data-consumer-group: partitions assigned: [operation-log-2]
+22:17:11.801 [org.springframework.kafka.KafkaListenerEndpointContainer#5-0-C-1] INFO  o.s.k.l.KafkaMessageListenerContainer - data-consumer-group: partitions assigned: [wave-data-0, wave-data-1]
+22:17:11.801 [org.springframework.kafka.KafkaListenerEndpointContainer#6-0-C-1] INFO  o.s.k.l.KafkaMessageListenerContainer - data-consumer-group: partitions assigned: [operation-log-0, operation-log-1]
+22:17:11.801 [org.springframework.kafka.KafkaListenerEndpointContainer#4-0-C-1] INFO  o.s.k.l.KafkaMessageListenerContainer - data-consumer-group: partitions assigned: [shot-metadata-0, shot-metadata-1]
+22:17:11.801 [org.springframework.kafka.KafkaListenerEndpointContainer#3-0-C-1] INFO  o.s.k.l.KafkaMessageListenerContainer - data-consumer-group: partitions assigned: [plc-interlock-2]
+22:17:11.801 [org.springframework.kafka.KafkaListenerEndpointContainer#0-0-C-1] INFO  o.s.k.l.KafkaMessageListenerContainer - data-consumer-group: partitions assigned: [shot-metadata-2]
+22:17:11.801 [org.springframework.kafka.KafkaListenerEndpointContainer#1-0-C-1] INFO  o.s.k.l.KafkaMessageListenerContainer - data-consumer-group: partitions assigned: [wave-data-2]
+22:17:11.801 [org.springframework.kafka.KafkaListenerEndpointContainer#7-0-C-1] INFO  o.s.k.l.KafkaMessageListenerContainer - data-consumer-group: partitions assigned: [plc-interlock-0, plc-interlock-1]
+22:18:11.265 [MessageBroker-1] INFO  o.s.w.s.c.WebSocketMessageBrokerStats - WebSocketSession[0 current WS(0)-HttpStream(0)-HttpPoll(0), 0 total, 0 closed abnormally (0 connect failure, 0 send limit, 0 transport error)], stompSubProtocol[processed CONNECT(0)-CONNECTED(0)-DISCONNECT(0)], stompBrokerRelay[null], inboundChannel[pool size = 0, active threads = 0, queued tasks = 0, completed tasks = 0], outboundChannel[pool size = 0, active threads = 0, queued tasks = 0, completed tasks = 0], sockJsScheduler[pool size = 1, active threads = 1, queued tasks = 0, completed tasks = 0]
+22:20:31.202 [http-nio-8080-exec-1] INFO  o.a.c.c.C.[Tomcat].[localhost].[/] - Initializing Spring DispatcherServlet 'dispatcherServlet'
+22:20:31.203 [http-nio-8080-exec-1] INFO  o.s.web.servlet.DispatcherServlet - Initializing Servlet 'dispatcherServlet'
+22:20:31.204 [http-nio-8080-exec-1] INFO  o.s.web.servlet.DispatcherServlet - Completed initialization in 1 ms
+22:21:01.999 [http-nio-8080-exec-8] DEBUG c.e.kafka.datasource.FileDataSource - 炮号 1 的PLC互锁日志不存在: data/PLC_logs/1/1_plc_interlock.txt
+22:21:02.012 [http-nio-8080-exec-8] INFO  c.e.kafka.datasource.FileDataSource - 从JSON加载炮号1的Tube通道: 9 个
+22:21:02.282 [http-nio-8080-exec-8] INFO  c.e.kafka.datasource.FileDataSource - 成功读取TDMS文件: data/TUBE/1/1_Tube.tdms, 通道: TiPumpCurrent, 样本数: 10400
+22:21:02.454 [http-nio-8080-exec-8] INFO  c.e.kafka.datasource.FileDataSource - 成功读取TDMS文件: data/TUBE/1/1_Tube.tdms, 通道: NegCurrent, 样本数: 10400
+22:21:02.608 [http-nio-8080-exec-8] INFO  c.e.kafka.datasource.FileDataSource - 成功读取TDMS文件: data/TUBE/1/1_Tube.tdms, 通道: FilaVoltage, 样本数: 10400
+22:21:02.756 [http-nio-8080-exec-8] INFO  c.e.kafka.datasource.FileDataSource - 成功读取TDMS文件: data/TUBE/1/1_Tube.tdms, 通道: InPower, 样本数: 10400
+22:21:02.904 [http-nio-8080-exec-8] INFO  c.e.kafka.datasource.FileDataSource - 成功读取TDMS文件: data/TUBE/1/1_Tube.tdms, 通道: PosVoltage, 样本数: 10400
+22:21:03.045 [http-nio-8080-exec-8] INFO  c.e.kafka.datasource.FileDataSource - 成功读取TDMS文件: data/TUBE/1/1_Tube.tdms, 通道: FilaCurrent, 样本数: 10400
+22:21:03.183 [http-nio-8080-exec-8] INFO  c.e.kafka.datasource.FileDataSource - 成功读取TDMS文件: data/TUBE/1/1_Tube.tdms, 通道: RefPower, 样本数: 10400
+22:21:03.332 [http-nio-8080-exec-8] INFO  c.e.kafka.datasource.FileDataSource - 成功读取TDMS文件: data/TUBE/1/1_Tube.tdms, 通道: NegVoltage, 样本数: 10400
+22:21:03.481 [http-nio-8080-exec-8] INFO  c.e.kafka.datasource.FileDataSource - 成功读取TDMS文件: data/TUBE/1/1_Tube.tdms, 通道: PosCurrent, 样本数: 10400
+22:21:03.482 [http-nio-8080-exec-8] INFO  c.e.kafka.datasource.FileDataSource - 从JSON加载炮号1的Water通道: 32 个
+22:21:03.626 [http-nio-8080-exec-8] INFO  c.e.kafka.datasource.FileDataSource - 成功读取TDMS文件: data/TUBE/1/1_Water.tdms, 通道: 140滤波器T17回, 样本数: 10225
+22:21:03.759 [http-nio-8080-exec-8] INFO  c.e.kafka.datasource.FileDataSource - 成功读取TDMS文件: data/TUBE/1/1_Water.tdms, 通道: 140管体T7回, 样本数: 10225
+22:21:03.920 [http-nio-8080-exec-8] INFO  c.e.kafka.datasource.FileDataSource - 成功读取TDMS文件: data/TUBE/1/1_Water.tdms, 通道: 140光栅3T26回, 样本数: 10225
+22:21:04.064 [http-nio-8080-exec-8] INFO  c.e.kafka.datasource.FileDataSource - 成功读取TDMS文件: data/TUBE/1/1_Water.tdms, 通道: 140滤波器T21回, 样本数: 10225
+22:21:04.226 [http-nio-8080-exec-8] INFO  c.e.kafka.datasource.FileDataSource - 成功读取TDMS文件: data/TUBE/1/1_Water.tdms, 通道: 140tankload T12回, 样本数: 10225
+22:21:04.382 [http-nio-8080-exec-8] INFO  c.e.kafka.datasource.FileDataSource - 成功读取TDMS文件: data/TUBE/1/1_Water.tdms, 通道: 140阳极T1进, 样本数: 10225
+22:21:04.541 [http-nio-8080-exec-8] INFO  c.e.kafka.datasource.FileDataSource - 成功读取TDMS文件: data/TUBE/1/1_Water.tdms, 通道: 140MOU过渡段T10回, 样本数: 10225
+22:21:04.685 [http-nio-8080-exec-8] INFO  c.e.kafka.datasource.FileDataSource - 成功读取TDMS文件: data/TUBE/1/1_Water.tdms, 通道: 140收集极回, 样本数: 10225
+22:21:04.838 [http-nio-8080-exec-8] INFO  c.e.kafka.datasource.FileDataSource - 成功读取TDMS文件: data/TUBE/1/1_Water.tdms, 通道: 140小负载T9回, 样本数: 10225
+22:21:04.989 [http-nio-8080-exec-8] INFO  c.e.kafka.datasource.FileDataSource - 成功读取TDMS文件: data/TUBE/1/1_Water.tdms, 通道: 140俄大负载A T3回, 样本数: 10225
+22:21:05.145 [http-nio-8080-exec-8] INFO  c.e.kafka.datasource.FileDataSource - 成功读取TDMS文件: data/TUBE/1/1_Water.tdms, 通道: 140阳极T1回, 样本数: 10225
+22:21:05.302 [http-nio-8080-exec-8] INFO  c.e.kafka.datasource.FileDataSource - 成功读取TDMS文件: data/TUBE/1/1_Water.tdms, 通道: 140金刚石窗T20回, 样本数: 10225
+22:21:05.466 [http-nio-8080-exec-8] INFO  c.e.kafka.datasource.FileDataSource - 成功读取TDMS文件: data/TUBE/1/1_Water.tdms, 通道: 140弯头T14回, 样本数: 10225
+22:21:05.621 [http-nio-8080-exec-8] INFO  c.e.kafka.datasource.FileDataSource - 成功读取TDMS文件: data/TUBE/1/1_Water.tdms, 通道: 140负载1 T27回, 样本数: 10225
+22:21:05.782 [http-nio-8080-exec-8] INFO  c.e.kafka.datasource.FileDataSource - 成功读取TDMS文件: data/TUBE/1/1_Water.tdms, 通道: 140备用T30, 样本数: 10225
+22:21:05.942 [http-nio-8080-exec-8] INFO  c.e.kafka.datasource.FileDataSource - 成功读取TDMS文件: data/TUBE/1/1_Water.tdms, 通道: 140器件T16回, 样本数: 10225
+22:21:06.098 [http-nio-8080-exec-8] INFO  c.e.kafka.datasource.FileDataSource - 成功读取TDMS文件: data/TUBE/1/1_Water.tdms, 通道: 140长负载T11回, 样本数: 10225
+22:21:06.250 [http-nio-8080-exec-8] INFO  c.e.kafka.datasource.FileDataSource - 成功读取TDMS文件: data/TUBE/1/1_Water.tdms, 通道: 140弯头T18回, 样本数: 10225
+22:21:06.415 [http-nio-8080-exec-8] INFO  c.e.kafka.datasource.FileDataSource - 成功读取TDMS文件: data/TUBE/1/1_Water.tdms, 通道: 140波导T23回, 样本数: 10225
+22:21:06.568 [http-nio-8080-exec-8] INFO  c.e.kafka.datasource.FileDataSource - 成功读取TDMS文件: data/TUBE/1/1_Water.tdms, 通道: 140负载2 T28回, 样本数: 10225
+22:21:06.726 [http-nio-8080-exec-8] INFO  c.e.kafka.datasource.FileDataSource - 成功读取TDMS文件: data/TUBE/1/1_Water.tdms, 通道: 140光栅1T24回, 样本数: 10225
+22:21:06.885 [http-nio-8080-exec-8] INFO  c.e.kafka.datasource.FileDataSource - 成功读取TDMS文件: data/TUBE/1/1_Water.tdms, 通道: 140滤波器T22回, 样本数: 10225
+22:21:07.047 [http-nio-8080-exec-8] INFO  c.e.kafka.datasource.FileDataSource - 成功读取TDMS文件: data/TUBE/1/1_Water.tdms, 通道: 140金刚石窗T15回, 样本数: 10225
+22:21:07.204 [http-nio-8080-exec-8] INFO  c.e.kafka.datasource.FileDataSource - 成功读取TDMS文件: data/TUBE/1/1_Water.tdms, 通道: 140负载3 T29回, 样本数: 10225
+22:21:07.360 [http-nio-8080-exec-8] INFO  c.e.kafka.datasource.FileDataSource - 成功读取TDMS文件: data/TUBE/1/1_Water.tdms, 通道: 140收集极T5进, 样本数: 10225
+22:21:07.522 [http-nio-8080-exec-8] INFO  c.e.kafka.datasource.FileDataSource - 成功读取TDMS文件: data/TUBE/1/1_Water.tdms, 通道: 140主窗口T2回, 样本数: 10225
+22:21:07.684 [http-nio-8080-exec-8] INFO  c.e.kafka.datasource.FileDataSource - 成功读取TDMS文件: data/TUBE/1/1_Water.tdms, 通道: 140镜子T6回, 样本数: 10225
+22:21:07.840 [http-nio-8080-exec-8] INFO  c.e.kafka.datasource.FileDataSource - 成功读取TDMS文件: data/TUBE/1/1_Water.tdms, 通道: 140光栅2T25回, 样本数: 10225
+22:21:08.002 [http-nio-8080-exec-8] INFO  c.e.kafka.datasource.FileDataSource - 成功读取TDMS文件: data/TUBE/1/1_Water.tdms, 通道: 140TAPER T19回, 样本数: 10225
+22:21:08.147 [http-nio-8080-exec-8] INFO  c.e.kafka.datasource.FileDataSource - 成功读取TDMS文件: data/TUBE/1/1_Water.tdms, 通道: 140MOU T8回, 样本数: 10225
+22:21:08.303 [http-nio-8080-exec-8] INFO  c.e.kafka.datasource.FileDataSource - 成功读取TDMS文件: data/TUBE/1/1_Water.tdms, 通道: 140极化器T13回, 样本数: 10225
+22:21:08.458 [http-nio-8080-exec-8] INFO  c.e.kafka.datasource.FileDataSource - 成功读取TDMS文件: data/TUBE/1/1_Water.tdms, 通道: 140俄大负载M T4回, 样本数: 10225
+22:43:11.526 [http-nio-8080-exec-4] DEBUG c.e.kafka.datasource.FileDataSource - 炮号 1 的PLC互锁日志不存在: data/PLC_logs/1/1_plc_interlock.txt
+22:43:11.527 [http-nio-8080-exec-4] INFO  c.e.kafka.datasource.FileDataSource - 从JSON加载炮号1的Tube通道: 9 个
+22:43:11.673 [http-nio-8080-exec-4] INFO  c.e.kafka.datasource.FileDataSource - 成功读取TDMS文件: data/TUBE/1/1_Tube.tdms, 通道: TiPumpCurrent, 样本数: 10400
+22:43:11.821 [http-nio-8080-exec-4] INFO  c.e.kafka.datasource.FileDataSource - 成功读取TDMS文件: data/TUBE/1/1_Tube.tdms, 通道: NegCurrent, 样本数: 10400
+22:43:12.010 [http-nio-8080-exec-4] INFO  c.e.kafka.datasource.FileDataSource - 成功读取TDMS文件: data/TUBE/1/1_Tube.tdms, 通道: FilaVoltage, 样本数: 10400
+22:43:12.158 [http-nio-8080-exec-4] INFO  c.e.kafka.datasource.FileDataSource - 成功读取TDMS文件: data/TUBE/1/1_Tube.tdms, 通道: InPower, 样本数: 10400
+22:43:12.296 [http-nio-8080-exec-4] INFO  c.e.kafka.datasource.FileDataSource - 成功读取TDMS文件: data/TUBE/1/1_Tube.tdms, 通道: PosVoltage, 样本数: 10400
+22:43:12.434 [http-nio-8080-exec-4] INFO  c.e.kafka.datasource.FileDataSource - 成功读取TDMS文件: data/TUBE/1/1_Tube.tdms, 通道: FilaCurrent, 样本数: 10400
+22:43:12.584 [http-nio-8080-exec-4] INFO  c.e.kafka.datasource.FileDataSource - 成功读取TDMS文件: data/TUBE/1/1_Tube.tdms, 通道: RefPower, 样本数: 10400
+22:43:12.741 [http-nio-8080-exec-4] INFO  c.e.kafka.datasource.FileDataSource - 成功读取TDMS文件: data/TUBE/1/1_Tube.tdms, 通道: NegVoltage, 样本数: 10400
+22:43:12.887 [http-nio-8080-exec-4] INFO  c.e.kafka.datasource.FileDataSource - 成功读取TDMS文件: data/TUBE/1/1_Tube.tdms, 通道: PosCurrent, 样本数: 10400
+22:43:12.888 [http-nio-8080-exec-4] INFO  c.e.kafka.datasource.FileDataSource - 从JSON加载炮号1的Water通道: 32 个
+22:43:13.057 [http-nio-8080-exec-4] INFO  c.e.kafka.datasource.FileDataSource - 成功读取TDMS文件: data/TUBE/1/1_Water.tdms, 通道: 140滤波器T17回, 样本数: 10225
+22:43:13.218 [http-nio-8080-exec-4] INFO  c.e.kafka.datasource.FileDataSource - 成功读取TDMS文件: data/TUBE/1/1_Water.tdms, 通道: 140管体T7回, 样本数: 10225
+22:43:13.371 [http-nio-8080-exec-4] INFO  c.e.kafka.datasource.FileDataSource - 成功读取TDMS文件: data/TUBE/1/1_Water.tdms, 通道: 140光栅3T26回, 样本数: 10225
+22:43:13.528 [http-nio-8080-exec-4] INFO  c.e.kafka.datasource.FileDataSource - 成功读取TDMS文件: data/TUBE/1/1_Water.tdms, 通道: 140滤波器T21回, 样本数: 10225
+22:43:13.681 [http-nio-8080-exec-4] INFO  c.e.kafka.datasource.FileDataSource - 成功读取TDMS文件: data/TUBE/1/1_Water.tdms, 通道: 140tankload T12回, 样本数: 10225
+22:43:13.831 [http-nio-8080-exec-4] INFO  c.e.kafka.datasource.FileDataSource - 成功读取TDMS文件: data/TUBE/1/1_Water.tdms, 通道: 140阳极T1进, 样本数: 10225
+22:43:13.980 [http-nio-8080-exec-4] INFO  c.e.kafka.datasource.FileDataSource - 成功读取TDMS文件: data/TUBE/1/1_Water.tdms, 通道: 140MOU过渡段T10回, 样本数: 10225
+22:43:14.133 [http-nio-8080-exec-4] INFO  c.e.kafka.datasource.FileDataSource - 成功读取TDMS文件: data/TUBE/1/1_Water.tdms, 通道: 140收集极回, 样本数: 10225
+22:43:14.292 [http-nio-8080-exec-4] INFO  c.e.kafka.datasource.FileDataSource - 成功读取TDMS文件: data/TUBE/1/1_Water.tdms, 通道: 140小负载T9回, 样本数: 10225
+22:43:14.437 [http-nio-8080-exec-4] INFO  c.e.kafka.datasource.FileDataSource - 成功读取TDMS文件: data/TUBE/1/1_Water.tdms, 通道: 140俄大负载A T3回, 样本数: 10225
+22:43:14.592 [http-nio-8080-exec-4] INFO  c.e.kafka.datasource.FileDataSource - 成功读取TDMS文件: data/TUBE/1/1_Water.tdms, 通道: 140阳极T1回, 样本数: 10225
+22:43:14.748 [http-nio-8080-exec-4] INFO  c.e.kafka.datasource.FileDataSource - 成功读取TDMS文件: data/TUBE/1/1_Water.tdms, 通道: 140金刚石窗T20回, 样本数: 10225
+22:43:14.907 [http-nio-8080-exec-4] INFO  c.e.kafka.datasource.FileDataSource - 成功读取TDMS文件: data/TUBE/1/1_Water.tdms, 通道: 140弯头T14回, 样本数: 10225
+22:43:15.066 [http-nio-8080-exec-4] INFO  c.e.kafka.datasource.FileDataSource - 成功读取TDMS文件: data/TUBE/1/1_Water.tdms, 通道: 140负载1 T27回, 样本数: 10225
+22:43:15.236 [http-nio-8080-exec-4] INFO  c.e.kafka.datasource.FileDataSource - 成功读取TDMS文件: data/TUBE/1/1_Water.tdms, 通道: 140备用T30, 样本数: 10225
+22:43:15.408 [http-nio-8080-exec-4] INFO  c.e.kafka.datasource.FileDataSource - 成功读取TDMS文件: data/TUBE/1/1_Water.tdms, 通道: 140器件T16回, 样本数: 10225
+22:43:15.585 [http-nio-8080-exec-4] INFO  c.e.kafka.datasource.FileDataSource - 成功读取TDMS文件: data/TUBE/1/1_Water.tdms, 通道: 140长负载T11回, 样本数: 10225
+22:43:15.761 [http-nio-8080-exec-4] INFO  c.e.kafka.datasource.FileDataSource - 成功读取TDMS文件: data/TUBE/1/1_Water.tdms, 通道: 140弯头T18回, 样本数: 10225
+22:43:15.900 [http-nio-8080-exec-4] INFO  c.e.kafka.datasource.FileDataSource - 成功读取TDMS文件: data/TUBE/1/1_Water.tdms, 通道: 140波导T23回, 样本数: 10225
+22:43:16.045 [http-nio-8080-exec-4] INFO  c.e.kafka.datasource.FileDataSource - 成功读取TDMS文件: data/TUBE/1/1_Water.tdms, 通道: 140负载2 T28回, 样本数: 10225
+22:43:16.205 [http-nio-8080-exec-4] INFO  c.e.kafka.datasource.FileDataSource - 成功读取TDMS文件: data/TUBE/1/1_Water.tdms, 通道: 140光栅1T24回, 样本数: 10225
+22:43:16.361 [http-nio-8080-exec-4] INFO  c.e.kafka.datasource.FileDataSource - 成功读取TDMS文件: data/TUBE/1/1_Water.tdms, 通道: 140滤波器T22回, 样本数: 10225
+22:43:16.518 [http-nio-8080-exec-4] INFO  c.e.kafka.datasource.FileDataSource - 成功读取TDMS文件: data/TUBE/1/1_Water.tdms, 通道: 140金刚石窗T15回, 样本数: 10225
+22:43:16.676 [http-nio-8080-exec-4] INFO  c.e.kafka.datasource.FileDataSource - 成功读取TDMS文件: data/TUBE/1/1_Water.tdms, 通道: 140负载3 T29回, 样本数: 10225
+22:43:16.829 [http-nio-8080-exec-4] INFO  c.e.kafka.datasource.FileDataSource - 成功读取TDMS文件: data/TUBE/1/1_Water.tdms, 通道: 140收集极T5进, 样本数: 10225
+22:43:17.000 [http-nio-8080-exec-4] INFO  c.e.kafka.datasource.FileDataSource - 成功读取TDMS文件: data/TUBE/1/1_Water.tdms, 通道: 140主窗口T2回, 样本数: 10225
+22:43:17.151 [http-nio-8080-exec-4] INFO  c.e.kafka.datasource.FileDataSource - 成功读取TDMS文件: data/TUBE/1/1_Water.tdms, 通道: 140镜子T6回, 样本数: 10225
+22:43:17.303 [http-nio-8080-exec-4] INFO  c.e.kafka.datasource.FileDataSource - 成功读取TDMS文件: data/TUBE/1/1_Water.tdms, 通道: 140光栅2T25回, 样本数: 10225
+22:43:17.458 [http-nio-8080-exec-4] INFO  c.e.kafka.datasource.FileDataSource - 成功读取TDMS文件: data/TUBE/1/1_Water.tdms, 通道: 140TAPER T19回, 样本数: 10225
+22:43:17.609 [http-nio-8080-exec-4] INFO  c.e.kafka.datasource.FileDataSource - 成功读取TDMS文件: data/TUBE/1/1_Water.tdms, 通道: 140MOU T8回, 样本数: 10225
+22:43:17.763 [http-nio-8080-exec-4] INFO  c.e.kafka.datasource.FileDataSource - 成功读取TDMS文件: data/TUBE/1/1_Water.tdms, 通道: 140极化器T13回, 样本数: 10225
+22:43:17.918 [http-nio-8080-exec-4] INFO  c.e.kafka.datasource.FileDataSource - 成功读取TDMS文件: data/TUBE/1/1_Water.tdms, 通道: 140俄大负载M T4回, 样本数: 10225
+[[1;31mERROR[m] Failed to execute goal [32morg.springframework.boot:spring-boot-maven-plugin:3.2.0:run[m [1m(default-cli)[m on project [36mkafka-demo[m: [1;31mProcess terminated with exit code: 137[m -> [1m[Help 1][m
+[[1;31mERROR[m] 
+[[1;31mERROR[m] To see the full stack trace of the errors, re-run Maven with the [1m-e[m switch.
+[[1;31mERROR[m] Re-run Maven using the [1m-X[m switch to enable full debug logging.
+[[1;31mERROR[m] 
+[[1;31mERROR[m] For more information about the errors and possible solutions, please read the following articles:
+[[1;31mERROR[m] [1m[Help 1][m http://cwiki.apache.org/confluence/display/MAVEN/MojoExecutionException

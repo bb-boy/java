@@ -1,0 +1,22 @@
+=== TDMS Operation Log ===
+File      : data/TUBE/17/17_Tube.tdms
+Name      : 17_Tube
+ShotNo    : 17
+ShotNoSrc : file
+ShotNoTDMS: None
+ShotNoFile: 17
+LpLen     : None
+LpLenUnit : missing
+Fs        : 1000.000 Hz
+N         : 600 samples
+Expected  : nan s
+Actual    : 0.600 s
+Tolerance : 0.020 s
+Status    : 正常完成
+Reason    : 总采样时长 >= 预设脉宽(考虑容差)
+StartTime : 2019-10-05 08:51:31.820
+EndTime   : 2019-10-05 08:51:32.419
+
+--- Operations (absolute timestamps) ---
+[2019-10-05 08:51:31.822] 操作(调参) 阳极电压(PosVoltage) step 旧=-0.015444 新=-0.0297808 Δ=-0.0143 置信度=2.51σ
+[2019-10-05 08:51:31.921] 操作(调参) 阳极电压(PosVoltage) step 旧=-0.0292588 新=-0.047705 Δ=-0.0184 置信度=3.23σ

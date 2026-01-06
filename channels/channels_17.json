@@ -1,0 +1,426 @@
+{
+  "shotNo": 17,
+  "extractTime": "2026-01-04T16:07:10.257550",
+  "dataTypes": {
+    "Tube": {
+      "count": 9,
+      "channels": [
+        {
+          "name": "InPower",
+          "dataPoints": 600,
+          "dataType": "float64",
+          "properties": {},
+          "startTime": "2019-10-05T08:51:31.820390",
+          "sampleInterval": 0.001,
+          "unit": "Volts",
+          "niName": "InPower"
+        },
+        {
+          "name": "RefPower",
+          "dataPoints": 600,
+          "dataType": "float64",
+          "properties": {},
+          "startTime": "2019-10-05T08:51:31.820401",
+          "sampleInterval": 0.001,
+          "unit": "Volts",
+          "niName": "RefPower"
+        },
+        {
+          "name": "NegVoltage",
+          "dataPoints": 600,
+          "dataType": "float64",
+          "properties": {},
+          "startTime": "2019-10-05T08:51:31.820412",
+          "sampleInterval": 0.001,
+          "unit": "Volts",
+          "niName": "NegVoltage"
+        },
+        {
+          "name": "NegCurrent",
+          "dataPoints": 600,
+          "dataType": "float64",
+          "properties": {},
+          "startTime": "2019-10-05T08:51:31.820423",
+          "sampleInterval": 0.001,
+          "unit": "Volts",
+          "niName": "NegCurrent"
+        },
+        {
+          "name": "PosVoltage",
+          "dataPoints": 600,
+          "dataType": "float64",
+          "properties": {},
+          "startTime": "2019-10-05T08:51:31.820434",
+          "sampleInterval": 0.001,
+          "unit": "Volts",
+          "niName": "PosVoltage"
+        },
+        {
+          "name": "PosCurrent",
+          "dataPoints": 600,
+          "dataType": "float64",
+          "properties": {},
+          "startTime": "2019-10-05T08:51:31.820445",
+          "sampleInterval": 0.001,
+          "unit": "Volts",
+          "niName": "PosCurrent"
+        },
+        {
+          "name": "FilaVoltage",
+          "dataPoints": 600,
+          "dataType": "float64",
+          "properties": {},
+          "startTime": "2019-10-05T08:51:31.820456",
+          "sampleInterval": 0.001,
+          "unit": "Volts",
+          "niName": "FilaVoltage"
+        },
+        {
+          "name": "FilaCurrent",
+          "dataPoints": 600,
+          "dataType": "float64",
+          "properties": {},
+          "startTime": "2019-10-05T08:51:31.820467",
+          "sampleInterval": 0.001,
+          "unit": "Volts",
+          "niName": "FilaCurrent"
+        },
+        {
+          "name": "TiPumpCurrent",
+          "dataPoints": 600,
+          "dataType": "float64",
+          "properties": {},
+          "startTime": "2019-10-05T08:51:31.820478",
+          "sampleInterval": 0.001,
+          "unit": "Volts",
+          "niName": "TiPumpCurrent"
+        }
+      ]
+    },
+    "Water": {
+      "count": 32,
+      "channels": [
+        {
+          "name": "140阳极T1进",
+          "dataPoints": 450,
+          "dataType": "float64",
+          "properties": {},
+          "startTime": "2019-10-05T08:51:31.820377",
+          "sampleInterval": 0.001,
+          "unit": "Volts",
+          "niName": "140阳极T1进"
+        },
+        {
+          "name": "140阳极T1回",
+          "dataPoints": 450,
+          "dataType": "float64",
+          "properties": {},
+          "startTime": "2019-10-05T08:51:31.820388",
+          "sampleInterval": 0.001,
+          "unit": "Volts",
+          "niName": "140阳极T1回"
+        },
+        {
+          "name": "140主窗口T2回",
+          "dataPoints": 450,
+          "dataType": "float64",
+          "properties": {},
+          "startTime": "2019-10-05T08:51:31.820399",
+          "sampleInterval": 0.001,
+          "unit": "Volts",
+          "niName": "140主窗口T2回"
+        },
+        {
+          "name": "140收集极T5进",
+          "dataPoints": 450,
+          "dataType": "float64",
+          "properties": {},
+          "startTime": "2019-10-05T08:51:31.820410",
+          "sampleInterval": 0.001,
+          "unit": "Volts",
+          "niName": "140收集极T5进"
+        },
+        {
+          "name": "140收集极回",
+          "dataPoints": 450,
+          "dataType": "float64",
+          "properties": {},
+          "startTime": "2019-10-05T08:51:31.820421",
+          "sampleInterval": 0.001,
+          "unit": "Volts",
+          "niName": "140收集极回"
+        },
+        {
+          "name": "140镜子T6回",
+          "dataPoints": 450,
+          "dataType": "float64",
+          "properties": {},
+          "startTime": "2019-10-05T08:51:31.820432",
+          "sampleInterval": 0.001,
+          "unit": "Volts",
+          "niName": "140镜子T6回"
+        },
+        {
+          "name": "140管体T7回",
+          "dataPoints": 450,
+          "dataType": "float64",
+          "properties": {},
+          "startTime": "2019-10-05T08:51:31.820443",
+          "sampleInterval": 0.001,
+          "unit": "Volts",
+          "niName": "140管体T7回"
+        },
+        {
+          "name": "140MOU T8回",
+          "dataPoints": 450,
+          "dataType": "float64",
+          "properties": {},
+          "startTime": "2019-10-05T08:51:31.820454",
+          "sampleInterval": 0.001,
+          "unit": "Volts",
+          "niName": "140MOU T8回"
+        },
+        {
+          "name": "140小负载T9回",
+          "dataPoints": 450,
+          "dataType": "float64",
+          "properties": {},
+          "startTime": "2019-10-05T08:51:31.820465",
+          "sampleInterval": 0.001,
+          "unit": "Volts",
+          "niName": "140小负载T9回"
+        },
+        {
+          "name": "140MOU过渡段T10回",
+          "dataPoints": 450,
+          "dataType": "float64",
+          "properties": {},
+          "startTime": "2019-10-05T08:51:31.820476",
+          "sampleInterval": 0.001,
+          "unit": "Volts",
+          "niName": "140MOU过渡段T10回"
+        },
+        {
+          "name": "140长负载T11回",
+          "dataPoints": 450,
+          "dataType": "float64",
+          "properties": {},
+          "startTime": "2019-10-05T08:51:31.820487",
+          "sampleInterval": 0.001,
+          "unit": "Volts",
+          "niName": "140长负载T11回"
+        },
+        {
+          "name": "140tankload T12回",
+          "dataPoints": 450,
+          "dataType": "float64",
+          "properties": {},
+          "startTime": "2019-10-05T08:51:31.820498",
+          "sampleInterval": 0.001,
+          "unit": "Volts",
+          "niName": "140tankload T12回"
+        },
+        {
+          "name": "140极化器T13回",
+          "dataPoints": 450,
+          "dataType": "float64",
+          "properties": {},
+          "startTime": "2019-10-05T08:51:31.820509",
+          "sampleInterval": 0.001,
+          "unit": "Volts",
+          "niName": "140极化器T13回"
+        },
+        {
+          "name": "140弯头T14回",
+          "dataPoints": 450,
+          "dataType": "float64",
+          "properties": {},
+          "startTime": "2019-10-05T08:51:31.820520",
+          "sampleInterval": 0.001,
+          "unit": "Volts",
+          "niName": "140弯头T14回"
+        },
+        {
+          "name": "140金刚石窗T15回",
+          "dataPoints": 450,
+          "dataType": "float64",
+          "properties": {},
+          "startTime": "2019-10-05T08:51:31.820531",
+          "sampleInterval": 0.001,
+          "unit": "Volts",
+          "niName": "140金刚石窗T15回"
+        },
+        {
+          "name": "140器件T16回",
+          "dataPoints": 450,
+          "dataType": "float64",
+          "properties": {},
+          "startTime": "2019-10-05T08:51:31.820542",
+          "sampleInterval": 0.001,
+          "unit": "Volts",
+          "niName": "140器件T16回"
+        },
+        {
+          "name": "140俄大负载A T3回",
+          "dataPoints": 450,
+          "dataType": "float64",
+          "properties": {},
+          "startTime": "2019-10-05T08:51:31.820553",
+          "sampleInterval": 0.001,
+          "unit": "Volts",
+          "niName": "140俄大负载A T3回"
+        },
+        {
+          "name": "140俄大负载M T4回",
+          "dataPoints": 450,
+          "dataType": "float64",
+          "properties": {},
+          "startTime": "2019-10-05T08:51:31.820564",
+          "sampleInterval": 0.001,
+          "unit": "Volts",
+          "niName": "140俄大负载M T4回"
+        },
+        {
+          "name": "140滤波器T17回",
+          "dataPoints": 450,
+          "dataType": "float64",
+          "properties": {},
+          "startTime": "2019-10-05T08:51:31.820575",
+          "sampleInterval": 0.001,
+          "unit": "Volts",
+          "niName": "140滤波器T17回"
+        },
+        {
+          "name": "140弯头T18回",
+          "dataPoints": 450,
+          "dataType": "float64",
+          "properties": {},
+          "startTime": "2019-10-05T08:51:31.820586",
+          "sampleInterval": 0.001,
+          "unit": "Volts",
+          "niName": "140弯头T18回"
+        },
+        {
+          "name": "140TAPER T19回",
+          "dataPoints": 450,
+          "dataType": "float64",
+          "properties": {},
+          "startTime": "2019-10-05T08:51:31.820597",
+          "sampleInterval": 0.001,
+          "unit": "Volts",
+          "niName": "140TAPER T19回"
+        },
+        {
+          "name": "140金刚石窗T20回",
+          "dataPoints": 450,
+          "dataType": "float64",
+          "properties": {},
+          "startTime": "2019-10-05T08:51:31.820608",
+          "sampleInterval": 0.001,
+          "unit": "Volts",
+          "niName": "140金刚石窗T20回"
+        },
+        {
+          "name": "140滤波器T21回",
+          "dataPoints": 450,
+          "dataType": "float64",
+          "properties": {},
+          "startTime": "2019-10-05T08:51:31.820619",
+          "sampleInterval": 0.001,
+          "unit": "Volts",
+          "niName": "140滤波器T21回"
+        },
+        {
+          "name": "140滤波器T22回",
+          "dataPoints": 450,
+          "dataType": "float64",
+          "properties": {},
+          "startTime": "2019-10-05T08:51:31.820630",
+          "sampleInterval": 0.001,
+          "unit": "Volts",
+          "niName": "140滤波器T22回"
+        },
+        {
+          "name": "140波导T23回",
+          "dataPoints": 450,
+          "dataType": "float64",
+          "properties": {},
+          "startTime": "2019-10-05T08:51:31.820641",
+          "sampleInterval": 0.001,
+          "unit": "Volts",
+          "niName": "140波导T23回"
+        },
+        {
+          "name": "140光栅1T24回",
+          "dataPoints": 450,
+          "dataType": "float64",
+          "properties": {},
+          "startTime": "2019-10-05T08:51:31.820652",
+          "sampleInterval": 0.001,
+          "unit": "Volts",
+          "niName": "140光栅1T24回"
+        },
+        {
+          "name": "140光栅2T25回",
+          "dataPoints": 450,
+          "dataType": "float64",
+          "properties": {},
+          "startTime": "2019-10-05T08:51:31.820663",
+          "sampleInterval": 0.001,
+          "unit": "Volts",
+          "niName": "140光栅2T25回"
+        },
+        {
+          "name": "140光栅3T26回",
+          "dataPoints": 450,
+          "dataType": "float64",
+          "properties": {},
+          "startTime": "2019-10-05T08:51:31.820674",
+          "sampleInterval": 0.001,
+          "unit": "Volts",
+          "niName": "140光栅3T26回"
+        },
+        {
+          "name": "140负载1 T27回",
+          "dataPoints": 450,
+          "dataType": "float64",
+          "properties": {},
+          "startTime": "2019-10-05T08:51:31.820685",
+          "sampleInterval": 0.001,
+          "unit": "Volts",
+          "niName": "140负载1 T27回"
+        },
+        {
+          "name": "140负载2 T28回",
+          "dataPoints": 450,
+          "dataType": "float64",
+          "properties": {},
+          "startTime": "2019-10-05T08:51:31.820696",
+          "sampleInterval": 0.001,
+          "unit": "Volts",
+          "niName": "140负载2 T28回"
+        },
+        {
+          "name": "140负载3 T29回",
+          "dataPoints": 450,
+          "dataType": "float64",
+          "properties": {},
+          "startTime": "2019-10-05T08:51:31.820707",
+          "sampleInterval": 0.001,
+          "unit": "Volts",
+          "niName": "140负载3 T29回"
+        },
+        {
+          "name": "140备用T30",
+          "dataPoints": 450,
+          "dataType": "float64",
+          "properties": {},
+          "startTime": "2019-10-05T08:51:31.820718",
+          "sampleInterval": 0.001,
+          "unit": "Volts",
+          "niName": "140备用T30"
+        }
+      ]
+    }
+  }
+}

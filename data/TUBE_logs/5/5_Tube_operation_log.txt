@@ -1,0 +1,21 @@
+=== TDMS Operation Log ===
+File      : data/TUBE/5/5_Tube.tdms
+Name      : 5_Tube
+ShotNo    : 5
+ShotNoSrc : tdms
+ShotNoTDMS: 5
+ShotNoFile: 5
+LpLen     : 15000
+LpLenUnit : auto(samples)
+Fs        : 1000.000 Hz
+N         : 15400 samples
+Expected  : 15.000 s
+Actual    : 15.400 s
+Tolerance : 0.300 s
+Status    : 正常完成
+Reason    : 总采样时长 >= 预设脉宽(考虑容差)
+StartTime : 2021-02-25 06:25:00.487
+EndTime   : 2021-02-25 06:25:15.886
+
+--- Operations (absolute timestamps) ---
+(no operations detected)

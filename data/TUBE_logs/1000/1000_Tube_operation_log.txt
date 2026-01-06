@@ -1,0 +1,24 @@
+=== TDMS Operation Log ===
+File      : data/TUBE/1000/1000_Tube.tdms
+Name      : 1000_Tube
+ShotNo    : 1000
+ShotNoSrc : tdms
+ShotNoTDMS: 1000
+ShotNoFile: 1000
+LpLen     : 1000
+LpLenUnit : auto(samples)
+Fs        : 1000.000 Hz
+N         : 3400 samples
+Expected  : 1.000 s
+Actual    : 3.400 s
+Tolerance : 0.020 s
+Status    : 正常完成
+Reason    : 总采样时长 >= 预设脉宽(考虑容差)
+StartTime : 2019-10-22 04:50:55.809
+EndTime   : 2019-10-22 04:50:59.208
+
+--- Operations (absolute timestamps) ---
+[2019-10-22 04:50:56.691] 操作(调参) 阴极电压(NegVoltage) ramp 旧=4.57601 新=0.0170273 Δ=-4.56 置信度=1362.48σ
+[2019-10-22 04:50:56.736] 操作(调参) 阴极电压(NegVoltage) step 旧=4.57575 新=2.89506 Δ=-1.68 置信度=1220.42σ
+[2019-10-22 04:50:56.835] 操作(调参) 阴极电压(NegVoltage) step 旧=2.94066 新=0.638134 Δ=-2.3 置信度=1671.96σ
+[2019-10-22 04:50:56.855] 操作(调参) 阳极电压(PosVoltage) step 旧=1.53314 新=1.04093 Δ=-0.492 置信度=80.95σ

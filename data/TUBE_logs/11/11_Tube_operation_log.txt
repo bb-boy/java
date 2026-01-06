@@ -1,0 +1,21 @@
+=== TDMS Operation Log ===
+File      : data/TUBE/11/11_Tube.tdms
+Name      : 11_Tube
+ShotNo    : 11
+ShotNoSrc : tdms
+ShotNoTDMS: 11
+ShotNoFile: 11
+LpLen     : 10000
+LpLenUnit : auto(samples)
+Fs        : 1000.000 Hz
+N         : 10400 samples
+Expected  : 10.000 s
+Actual    : 10.400 s
+Tolerance : 0.200 s
+Status    : 正常完成
+Reason    : 总采样时长 >= 预设脉宽(考虑容差)
+StartTime : 2021-02-25 06:28:07.488
+EndTime   : 2021-02-25 06:28:17.887
+
+--- Operations (absolute timestamps) ---
+[2021-02-25 06:28:07.488] 操作(调参) 阳极电压(PosVoltage) ramp 旧=-0.0355265 新=-0.0377834 Δ=-0.00226 置信度=11.13σ

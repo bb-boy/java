@@ -1,0 +1,22 @@
+=== TDMS Operation Log ===
+File      : data/TUBE/4/4_Tube.tdms
+Name      : 4_Tube
+ShotNo    : 4
+ShotNoSrc : tdms
+ShotNoTDMS: 4
+ShotNoFile: 4
+LpLen     : 20
+LpLenUnit : auto(samples)
+Fs        : 1000.000 Hz
+N         : 600 samples
+Expected  : 0.020 s
+Actual    : 0.600 s
+Tolerance : 0.020 s
+Status    : 正常完成
+Reason    : 总采样时长 >= 预设脉宽(考虑容差)
+StartTime : 2022-07-19 06:24:10.531
+EndTime   : 2022-07-19 06:24:11.130
+
+--- Operations (absolute timestamps) ---
+[2022-07-19 06:24:10.634] 操作(调参) 阴极电压(NegVoltage) step 旧=0.978522 新=0.142725 Δ=-0.836 置信度=294.13σ
+[2022-07-19 06:24:11.056] 操作(调参) 阳极电压(PosVoltage) step 旧=0.917975 新=0.915878 Δ=-0.0021 置信度=2.52σ
