@@ -185,28 +185,36 @@ public class DataConsumer {
         try {
             Map<String, Object> data = objectMapper.readValue(message, Map.class);
             
-            OperationLogEntity entity = new OperationLogEntity();
-            entity.setShotNo((Integer) data.get("shotNo"));
+            Integer shotNo = (Integer) data.get("shotNo");
+            String channelName = (String) data.get("channelName");
+            
+            // 解析时间戳
+            LocalDateTime timestamp = null;
+            if (data.get("timestamp") != null) {
+                timestamp = parseDateTime(data.get("timestamp"));
+            }
+            
+            // 使用upsert逻辑：先查询是否存在，避免重复插入
+            OperationLogEntity entity;
+            if (timestamp != null) {
+                entity = operationLogRepository
+                    .findByShotNoAndTimestampAndChannelName(shotNo, timestamp, channelName)
+                    .orElse(new OperationLogEntity());
+            } else {
+                entity = new OperationLogEntity();
+                logger.warn("OperationLog timestamp为null: shotNo={}", shotNo);
+            }
+            
+            entity.setShotNo(shotNo);
             entity.setOperationType((String) data.get("operationType"));
-            entity.setChannelName((String) data.get("channelName"));
+            entity.setChannelName(channelName);
             entity.setStepType((String) data.get("stepType"));
             entity.setOldValue(toDouble(data.get("oldValue")));
             entity.setNewValue(toDouble(data.get("newValue")));
             entity.setDelta(toDouble(data.get("delta")));
             entity.setConfidence(toDouble(data.get("confidence")));
             entity.setFileSource((String) data.get("fileSource"));
-            
-            // 解析时间
-            if (data.get("timestamp") != null) {
-                logger.info("OperationLog原始timestamp数据类型: {}, 值: {}", 
-                    data.get("timestamp").getClass().getName(), 
-                    data.get("timestamp"));
-                LocalDateTime parsed = parseDateTime(data.get("timestamp"));
-                logger.info("OperationLog解析后的timestamp: {}", parsed);
-                entity.setTimestamp(parsed);
-            } else {
-                logger.warn("OperationLog timestamp为null: shotNo={}", entity.getShotNo());
-            }
+            entity.setTimestamp(timestamp);
             
             // 设置数据源类型
             String sourceType = (String) data.get("sourceType");
@@ -215,7 +223,8 @@ public class DataConsumer {
             }
             
             operationLogRepository.save(entity);
-            logger.debug("操作日志已存入数据库: ShotNo={}", entity.getShotNo());
+            logger.debug("操作日志已存入数据库: ShotNo={}, Channel={}, Time={}", 
+                        shotNo, channelName, timestamp);
             
         } catch (Exception e) {
             logger.error("处理操作日志消息失败: {}", message, e);

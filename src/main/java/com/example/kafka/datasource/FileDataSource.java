@@ -389,9 +389,9 @@ public class FileDataSource implements DataSource {
     private List<OperationLog> parseOperationLogs(Integer shotNo, Path logPath) {
         List<OperationLog> logs = new ArrayList<>();
         
-        // 正则表达式：匹配日志行格式
+        // 正则表达式：匹配日志行格式（支持负数）
         Pattern logPattern = Pattern.compile(
-            "\\[(\\d{4}-\\d{2}-\\d{2} \\d{2}:\\d{2}:\\d{2}\\.\\d{3})\\]\\s+操作\\((.+?)\\)\\s+(.+?)\\s+(\\w+)\\s+旧=([\\d.]+)\\s+新=([\\d.]+)\\s+Δ=([+-][\\d.]+)\\s+置信度=([\\d.]+)σ"
+            "\\[(\\d{4}-\\d{2}-\\d{2} \\d{2}:\\d{2}:\\d{2}\\.\\d{3})\\]\\s+操作\\((.+?)\\)\\s+(.+?)\\s+(\\w+)\\s+旧=([+-]?[\\d.]+)\\s+新=([+-]?[\\d.]+)\\s+Δ=([+-][\\d.]+)\\s+置信度=([\\d.]+)σ"
         );
         
         try (BufferedReader reader = Files.newBufferedReader(logPath)) {

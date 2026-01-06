@@ -69,8 +69,8 @@
         </div>
 
         <div class="card">
-            <h2>操作日志时间线（含3通道波形）</h2>
-            <div id="timeline" class="chart" style="height: 500px;"></div>
+            <h2>操作日志时间线</h2>
+            <div id="timeline" class="chart" style="height: 300px;"></div>
         </div>
 
         <div class="card">
@@ -141,10 +141,7 @@
                     `<option value="${s}">${s}</option>`
                 ).join('');
                 
-                // 自动选择第一个炮号并加载数据
                 if (shots.length > 0) {
-                    selector.value = shots[0];
-                    log(`✅ 自动选择炮号 ${shots[0]}`);
                     loadData();
                 }
             } catch (error) {
@@ -339,193 +336,55 @@
         
         async function loadTimeline(shotNo) {
             try {
-                log(`正在加载炮号 ${shotNo} 的时间线...`);
+                log(`正在加载炮号 ${shotNo} 的操作日志时间线...`);
                 const response = await fetch(`${API_BASE}/timeline/${shotNo}`);
-                if (!response.ok) throw new Error(`HTTP ${response.status}`);
-                
-                const data = await response.json();
-                log(`✅ 加载到 ${data.events.length} 个操作事件，${data.waveforms ? data.waveforms.length : 0} 个波形通道`);
-                
-                if (data.events.length === 0 && (!data.waveforms || data.waveforms.length === 0)) {
-                    timelineChart.setOption({
-                        title: { text: `炮号 ${shotNo} - 无数据`, left: 'center', textStyle: { fontSize: 14 } }
-                    });
-                    return;
-                }
-                
-                // 构建ECharts配置
-                const option = {
-                    title: { 
-                        text: `操作日志时间线 - 炮号 ${shotNo} (${data.events.length}个操作)`,
-                        left: 'center',
-                        textStyle: { fontSize: 14 }
-                    },
-                    tooltip: {
-                        trigger: 'axis',
-                        axisPointer: { type: 'cross' }
-                    },
-                    legend: {
-                        data: [],
-                        top: 30,
-                        type: 'scroll'
-                    },
-                    grid: {
-                        left: '8%',
-                        right: '5%',
-                        bottom: '15%',
-                        top: '15%'
-                    },
-                    xAxis: {
-                        type: 'time',
-                        name: '时间'
-                    },
-                    yAxis: {
-                        type: 'value',
-                        name: '数值',
-                        scale: true
-                    },
-                    dataZoom: [
-                        { type: 'slider', xAxisIndex: 0, start: 0, end: 100, height: 20 },
-                        { type: 'inside', xAxisIndex: 0 }
-                    ],
-                    series: []
-                };
-                
-                // 添加波形线系列
-                const colors = ['#1890ff', '#52c41a', '#faad14'];
-                if (data.waveforms && data.waveforms.length > 0) {
-                    data.waveforms.forEach((waveform, idx) => {
-                        const waveformData = waveform.timestamps.map((time, i) => [
-                            new Date(time).getTime(),
-                            waveform.values[i]
-                        ]);
-                        
-                        // 准备该通道的操作标记
-                        const channelEvents = data.events.filter(e => 
-                            e.channelName === waveform.channel || idx === 0  // 第一个通道显示所有事件
-                        );
-                        
-                        const markPoints = channelEvents.map(event => ({
-                            name: event.channelName,
-                            coord: [new Date(event.timestamp).getTime(), event.newValue || 0],
-                            value: event.action,
-                            symbol: 'pin',
-                            symbolSize: 10,
-                            itemStyle: {
-                                color: event.color === 'red' ? '#f5222d' : 
-                                       event.color === 'green' ? '#52c41a' : '#1890ff'
-                            },
-                            label: { show: false },
-                            tooltip: {
-                                formatter: () => {
-                                    const time = new Date(event.timestamp).toLocaleString('zh-CN');
-                                    return `时间: ${time}<br/>` +
-                                           `通道: ${event.channelName}<br/>` +
-                                           `操作: <b style="color:${event.color === 'red' ? '#f5222d' : event.color === 'green' ? '#52c41a' : '#1890ff'}">${event.action}</b><br/>` +
-                                           `旧值: ${event.oldValue != null ? event.oldValue.toFixed(4) : 'N/A'}<br/>` +
-                                           `新值: ${event.newValue != null ? event.newValue.toFixed(4) : 'N/A'}<br/>` +
-                                           `变化: ${event.delta != null ? (event.delta > 0 ? '+' : '') + event.delta.toFixed(4) : 'N/A'}`;
-                                }
-                            }
-                        }));
-                        
-                        option.legend.data.push(waveform.channelName);
-                        option.series.push({
-                            name: waveform.channelName,
-                            type: 'line',
-                            data: waveformData,
-                            sampling: 'lttb',
-                            lineStyle: { width: 1.5, color: colors[idx % colors.length] },
-                            areaStyle: {
-                                color: {
-                                    type: 'linear',
-                                    x: 0, y: 0, x2: 0, y2: 1,
-                                    colorStops: [
-                                        { offset: 0, color: colors[idx % colors.length] + '30' },
-                                        { offset: 1, color: colors[idx % colors.length] + '05' }
-                                    ]
-                                }
-                            },
-                            symbol: 'none',
-                            smooth: true,
-                            z: 1,
-                            markPoint: { data: markPoints }
-                        });
-                        
-                        log(`✅ ${waveform.channelName}: ${waveform.samples}个采样点`);
-                    });
-                }
-                
-                timelineChart.setOption(option);
-                log('✅ 时间线显示完成');
-            } catch (error) {
-                log(`⚠️ 加载时间线失败: ${error.message}`);
-                timelineChart.setOption({
-                    title: { 
-                        text: `炮号 ${shotNo} - 加载失败`,
-                        left: 'center',
-                        textStyle: { fontSize: 14, color: '#999' }
-                    }
-                });
-            }
-        }
-            try {
-                log(`正在加载炮号 ${shotNo} 的时间线 (通道: ${channel}, 类型: ${dataType})...`);
-                const response = await fetch(`${API_BASE}/timeline/${shotNo}?channel=${channel}&dataType=${dataType}`);
                 if (!response.ok) throw new Error(`HTTP ${response.status}`);
                 
                 const data = await response.json();
                 log(`✅ 加载到 ${data.totalEvents} 个操作事件`);
                 
-                if (data.totalEvents === 0 && !data.waveform) {
+                if (data.totalEvents === 0) {
                     timelineChart.setOption({
-                        title: { text: `炮号 ${shotNo} - 无数据`, left: 'center', textStyle: { fontSize: 14 } }
+                        title: { text: `炮号 ${shotNo} - 无操作日志`, left: 'center', textStyle: { fontSize: 14 } }
                     });
                     return;
                 }
                 
-                // 准备操作事件散点数据（带颜色标记）
-                // 使用newValue作为Y轴值，这样事件点会显示在对应的参数值位置
-                const eventData = data.events.map((event, idx) => ({
+                // 准备时间线数据
+                const timelineData = data.events.map(event => ({
                     name: event.operation || '操作',
                     value: [
                         event.timestamp,
-                        event.newValue != null ? event.newValue : 0,  // 使用实际参数值作为Y轴
+                        0,
                         event.channelName || '',
                         event.description || '',
-                        event.color || 'blue',
-                        event.action || '记录',
-                        event.oldValue,
-                        event.newValue,
-                        event.delta
-                    ],
-                    itemStyle: {
-                        color: event.color === 'red' ? '#f5222d' : 
-                               event.color === 'green' ? '#52c41a' : '#1890ff'
-                    }
+                        event.status || '',
+                        event.duration || ''
+                    ]
                 }));
                 
-                // 构建ECharts配置
-                const displayInfo = data.displayedEvents ? ` (显示${data.displayedEvents}/${data.totalEvents}个事件)` : '';
                 const option = {
                     title: { 
-                        text: `操作日志时间线 - 炮号 ${shotNo} - ${channel}${displayInfo}`,
+                        text: `操作日志时间线 - 炮号 ${shotNo} (共${data.totalEvents}个事件)`,
                         left: 'center',
                         textStyle: { fontSize: 14 }
                     },
                     tooltip: {
-                        trigger: 'axis',
-                        axisPointer: { type: 'cross' }
-                    },
-                    legend: {
-                        data: ['波形趋势', '参数调整'],
-                        top: 30
+                        trigger: 'item',
+                        formatter: function(params) {
+                            const d = params.data;
+                            return `<b>${d.name}</b><br/>` +
+                                   `时间: ${d.value[0]}<br/>` +
+                                   `通道: ${d.value[2] || 'N/A'}<br/>` +
+                                   `描述: ${d.value[3] || 'N/A'}<br/>` +
+                                   `状态: ${d.value[4] || 'N/A'}<br/>` +
+                                   `耗时: ${d.value[5] || 'N/A'}`;
+                        }
                     },
                     grid: {
-                        left: '8%',
-                        right: '5%',
-                        bottom: '15%',
-                        top: '15%'
+                        left: '10%',
+                        right: '10%',
+                        bottom: '15%'
                     },
                     xAxis: {
                         type: 'time',
@@ -542,109 +401,52 @@
                         }
                     },
                     yAxis: {
-                        type: 'value',
-                        name: `${channel} 数值`,
-                        scale: true  // 自动缩放Y轴
+                        type: 'category',
+                        data: ['操作事件'],
+                        axisLabel: { show: false }
                     },
-                    dataZoom: [
-                        {
-                            type: 'slider',
-                            xAxisIndex: 0,
-                            start: 0,
-                            end: 100,
-                            height: 20
-                        },
-                        {
-                            type: 'inside',
-                            xAxisIndex: 0
-                        }
-                    ],
-                    series: []
-                };
-                
-                // 添加波形线系列
-                if (data.waveform && data.waveform.values && data.waveform.values.length > 0) {
-                    const waveformData = data.waveform.timestamps.map((time, idx) => [
-                        new Date(time).getTime(),  // 转换为时间戳
-                        data.waveform.values[idx]
-                    ]);
-                    
-                    option.series.push({
-                        name: '波形趋势',
-                        type: 'line',
-                        data: waveformData,
-                        sampling: 'lttb',
-                        lineStyle: { width: 1.5, color: '#1890ff' },
-                        areaStyle: {
-                            color: {
-                                type: 'linear',
-                                x: 0, y: 0, x2: 0, y2: 1,
-                                colorStops: [
-                                    { offset: 0, color: 'rgba(24, 144, 255, 0.2)' },
-                                    { offset: 1, color: 'rgba(24, 144, 255, 0.05)' }
-                                ]
-                            }
-                        },
-                        symbol: 'none',
-                        smooth: true,
-                        z: 1  // 波形在底层
-                    });
-                    
-                    log(`✅ 波形数据: 原始采样率=${data.waveform.originalSampleRate}Hz, ` +
-                        `下采样因子=${data.waveform.downsampleFactor}, ` +
-                        `显示点数=${data.waveform.downsampledSamples}`);
-                }
-                
-                // 添加操作事件散点系列
-                if (eventData.length > 0) {
-                    const scatterData = eventData.map(e => ({
-                        ...e,
-                        value: [
-                            new Date(e.value[0]).getTime(),  // 转换为时间戳
-                            e.value[1],  // Y轴值（参数值）
-                            ...e.value.slice(2)
-                        ]
-                    }));
-                    
-                    option.series.push({
-                        name: '参数调整',
+                    dataZoom: [{
+                        type: 'slider',
+                        xAxisIndex: 0,
+                        start: 0,
+                        end: 100
+                    }],
+                    series: [{
+                        name: '操作日志',
                         type: 'scatter',
-                        symbolSize: 12,
-                        data: scatterData,
-                        tooltip: {
-                            formatter: function(params) {
-                                const d = params.data.value;
-                                const time = new Date(d[0]).toLocaleString('zh-CN');
-                                return `<b>${params.data.name}</b><br/>` +
-                                       `时间: ${time}<br/>` +
-                                       `通道: ${d[2] || 'N/A'}<br/>` +
-                                       `操作: <span style="color:${params.color}">${d[5]}</span><br/>` +
-                                       `旧值: ${d[6] != null ? d[6].toFixed(4) : 'N/A'}<br/>` +
-                                       `新值: ${d[7] != null ? d[7].toFixed(4) : 'N/A'}<br/>` +
-                                       `变化: ${d[8] != null ? (d[8] > 0 ? '+' : '') + d[8].toFixed(4) : 'N/A'}`;
+                        symbolSize: 20,
+                        data: timelineData,
+                        itemStyle: {
+                            color: function(params) {
+                                const status = params.data.value[4];
+                                if (status === 'success' || status === '成功') return '#52c41a';
+                                if (status === 'error' || status === '失败') return '#f5222d';
+                                return '#1890ff';
                             }
                         },
                         label: {
-                            show: false
-                        },
-                        z: 2  // 散点在上层
-                    });
-                }
+                            show: true,
+                            position: 'top',
+                            formatter: '{b}',
+                            fontSize: 10
+                        }
+                    }]
+                };
                 
                 timelineChart.setOption(option);
-                log('✅ 增强时间线显示完成');
+                log('✅ 操作日志时间线显示完成');
             } catch (error) {
                 log(`⚠️ 加载时间线失败: ${error.message}`);
                 timelineChart.setOption({
                     title: { 
-                        text: `炮号 ${shotNo} - 加载失败`,
+                        text: `炮号 ${shotNo} - 暂无操作日志`,
                         left: 'center',
                         textStyle: { fontSize: 14, color: '#999' }
                     }
                 });
             }
         }
-        
+
         // 页面加载时初始化
         window.addEventListener('load', () => {
             log('=== 页面加载完成 ===');
@@ -657,7 +459,6 @@
         // 窗口大小改变时重绘
         window.addEventListener('resize', () => {
             if (chart) chart.resize();
-            if (timelineChart) timelineChart.resize();
         });
     </script>
 </body>

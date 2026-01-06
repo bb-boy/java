@@ -47,6 +47,12 @@ public interface OperationLogRepository extends JpaRepository<OperationLogEntity
     long countByShotNo(Integer shotNo);
     
     /**
+     * 根据唯一标识查找操作日志（用于去重）
+     */
+    java.util.Optional<OperationLogEntity> findByShotNoAndTimestampAndChannelName(
+        Integer shotNo, LocalDateTime timestamp, String channelName);
+    
+    /**
      * 删除指定炮号的操作日志
      */
     void deleteByShotNo(Integer shotNo);

@@ -287,105 +287,28 @@ public class HybridDataController {
     }
     
     /**
-     * 获取指定炮号的操作日志时间线（固定显示3个通道波形）
+     * 获取指定炮号的操作日志时间线
      * GET /api/hybrid/timeline/{shotNo}
      */
     @GetMapping("/timeline/{shotNo}")
     public ResponseEntity<Map<String, Object>> getTimeline(@PathVariable Integer shotNo) {
-        
         Map<String, Object> result = new HashMap<>();
         
-        // 从MySQL获取所有操作日志（不采样）
+        // 从MySQL获取操作日志
         List<OperationLogEntity> logs = operationLogRepository.findByShotNoOrderByTimestampAsc(shotNo);
         
         result.put("shotNo", shotNo);
-        
-        // 转换操作日志为时间线事件（带颜色标记）
-        List<Map<String, Object>> events = logs.stream().map(log -> {
+        result.put("totalEvents", logs.size());
+        result.put("events", logs.stream().map(log -> {
             Map<String, Object> event = new HashMap<>();
             event.put("timestamp", log.getTimestamp());
             event.put("operation", log.getOperationType());
             event.put("channelName", log.getChannelName());
             event.put("description", log.getStepType());
-            event.put("oldValue", log.getOldValue());
-            event.put("newValue", log.getNewValue());
-            event.put("delta", log.getDelta());
-            
-            // 根据delta判断颜色：正数=增加(红色)，负数=降低(绿色)
-            if (log.getDelta() != null) {
-                event.put("color", log.getDelta() > 0 ? "red" : "green");
-                event.put("action", log.getDelta() > 0 ? "增加" : "降低");
-            } else {
-                event.put("color", "blue");
-                event.put("action", "记录");
-            }
-            
+            event.put("status", log.getOldValue() != null ? "数据变更" : "操作记录");
+            event.put("duration", log.getDelta());
             return event;
-        }).collect(Collectors.toList());
-        
-        result.put("events", events);
-        
-        // 获取三个固定通道的波形数据
-        String[] channels = {"NegVoltage", "PosVoltage", "FilaCurrent"};
-        String[] channelNames = {"阴极电压", "阳极电压", "灯丝电流"};
-        List<Map<String, Object>> waveforms = new ArrayList<>();
-        
-        for (int i = 0; i < channels.length; i++) {
-            String channel = channels[i];
-            String channelName = channelNames[i];
-            
-            try {
-                Optional<WaveDataEntity> waveEntity = waveDataRepository
-                    .findByShotNoAndChannelNameAndDataType(shotNo, channel, "Tube");
-                
-                if (waveEntity.isPresent() && influxDBClient != null) {
-                    WaveDataEntity entity = waveEntity.get();
-                    
-                    // 使用InfluxDB聚合查询，直接返回下采样后的数据
-                    String flux = String.format(
-                        "from(bucket: \"%s\") " +
-                        "|> range(start: -30d) " +
-                        "|> filter(fn: (r) => r._measurement == \"waveform\") " +
-                        "|> filter(fn: (r) => r.shot_no == \"%d\") " +
-                        "|> filter(fn: (r) => r.channel_name == \"%s\") " +
-                        "|> filter(fn: (r) => r.data_type == \"Tube\") " +
-                        "|> aggregateWindow(every: 100ms, fn: mean, createEmpty: false) " +
-                        "|> limit(n: 3000) " +
-                        "|> sort(columns: [\"_time\"])",
-                        bucket, shotNo, channel
-                    );
-                    
-                    List<FluxTable> tables = influxDBClient.getQueryApi().query(flux, org);
-                    List<Double> values = new ArrayList<>();
-                    List<String> timestamps = new ArrayList<>();
-                    
-                    tables.forEach(table -> 
-                        table.getRecords().forEach(record -> {
-                            Object value = record.getValue();
-                            if (value instanceof Number) {
-                                values.add(((Number) value).doubleValue());
-                                timestamps.add(record.getTime().toString());
-                            }
-                        })
-                    );
-                    
-                    if (!values.isEmpty()) {
-                        Map<String, Object> waveformData = new HashMap<>();
-                        waveformData.put("channel", channel);
-                        waveformData.put("channelName", channelName);
-                        waveformData.put("values", values);
-                        waveformData.put("timestamps", timestamps);
-                        waveformData.put("samples", values.size());
-                        waveforms.add(waveformData);
-                    }
-                }
-            } catch (Exception e) {
-                // 忽略单个通道错误，继续加载其他通道
-                System.err.println("加载通道 " + channel + " 失败: " + e.getMessage());
-            }
-        }
-        
-        result.put("waveforms", waveforms);
+        }).collect(Collectors.toList()));
         
         return ResponseEntity.ok(result);
     }
