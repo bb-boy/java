@@ -126,9 +126,9 @@ public class HybridDataController {
      * MySQL: 元数据、通道列表
      * InfluxDB: 波形数据
      * 
-     * GET /api/hybrid/shot/1
+     * GET /api/hybrid/shots/1
      */
-    @GetMapping("/shot/{shotNo}")
+    @GetMapping("/shots/{shotNo}")
     public ResponseEntity<Map<String, Object>> getShotData(@PathVariable Integer shotNo) {
         Map<String, Object> result = new HashMap<>();
         
@@ -284,11 +284,27 @@ public class HybridDataController {
         return ResponseEntity.ok(result);
     }
     
-    /**
-     * 混合查询：元数据从MySQL，波形从InfluxDB
-     * GET /api/hybrid/shot/1/complete
+    /**     * 获取指定炮号的通道列表
+     * GET /api/hybrid/shots/1/channels?type=Tube
      */
-    @GetMapping("/shot/{shotNo}/complete")
+    @GetMapping("/shots/{shotNo}/channels")
+    public ResponseEntity<List<String>> getChannels(
+            @PathVariable Integer shotNo,
+            @RequestParam(defaultValue = "Tube") String type) {
+        // 从MySQL获取通道列表
+        List<WaveDataEntity> channels = waveDataRepository.findByShotNo(shotNo);
+        List<String> channelNames = channels.stream()
+            .filter(ch -> type.equals(ch.getDataType()))
+            .map(WaveDataEntity::getChannelName)
+            .distinct()
+            .collect(Collectors.toList());
+        return ResponseEntity.ok(channelNames);
+    }
+    
+    /**     * 混合查询：元数据从MySQL，波形从InfluxDB
+     * GET /api/hybrid/shots/1/complete
+     */
+    @GetMapping("/shots/{shotNo}/complete")
     public ResponseEntity<Map<String, Object>> getCompleteData(@PathVariable Integer shotNo) {
         Map<String, Object> result = new HashMap<>();
         
