@@ -71,16 +71,16 @@ mvn clean package -DskipTests
 
 用法示例：
 
-- 启动（网络模式 - 默认）：
+- 启动（文件模式 - 默认）：
+
+  ```bash
+  ./scripts/projectctl.sh start
+  ```
+
+- 启动（网络模式，使用 Kafka）：
 
   ```bash
   ./scripts/projectctl.sh start --mode network
-  ```
-
-- 启动（文件模式，使用本地文件源）：
-
-  ```bash
-  ./scripts/projectctl.sh start --mode file
   ```
 
 - 停止：

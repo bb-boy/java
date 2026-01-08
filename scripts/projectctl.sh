@@ -12,7 +12,7 @@ RUN_DIR="$ROOT_DIR/run"
 APP_PID_FILE="$RUN_DIR/app.pid"
 APP_LOG_FILE="$LOG_DIR/app.log"
 WATCHER_PID_FILE="$RUN_DIR/watcher.pid"
-MODE="network" # default
+MODE="file" # default (changed to use local file source by default)
 
 mkdir -p "$LOG_DIR" "$RUN_DIR"
 
