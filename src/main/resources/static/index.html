@@ -344,9 +344,13 @@
                 log(`✅ 加载到 ${data.totalEvents} 个操作事件`);
                 
                 if (data.totalEvents === 0) {
+                    // 清除旧数据，显示无操作日志
                     timelineChart.setOption({
-                        title: { text: `炮号 ${shotNo} - 无操作日志`, left: 'center', textStyle: { fontSize: 14 } }
-                    });
+                        title: { text: `炮号 ${shotNo} - 无操作日志`, left: 'center', textStyle: { fontSize: 14 } },
+                        xAxis: { type: 'time', show: false },
+                        yAxis: { show: false },
+                        series: []  // 清空系列数据
+                    }, true);  // true = 不合并，完全替换
                     return;
                 }
                 
