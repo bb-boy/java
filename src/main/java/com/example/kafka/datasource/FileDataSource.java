@@ -2,6 +2,7 @@ package com.example.kafka.datasource;
 
 import com.example.kafka.model.*;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -61,6 +62,9 @@ public class FileDataSource implements DataSource {
     
     // JSON解析器，用于读取通道元数据
     private final ObjectMapper objectMapper = new ObjectMapper();
+
+    @Autowired(required = false)
+    private com.example.kafka.repository.ChannelRepository channelRepository;
     
     // 日期时间格式化器，用于解析日志中的时间戳
     private static final DateTimeFormatter DATE_TIME_FORMATTER = 
@@ -242,6 +246,21 @@ public class FileDataSource implements DataSource {
      */
     @Override
     public List<String> getChannelNames(Integer shotNo, String dataType) {
+        // 优先尝试从数据库读取通道元数据（channels 表）
+        if (channelRepository != null) {
+            try {
+                List<com.example.kafka.entity.ChannelEntity> dbChannels = channelRepository
+                    .findByShotNoAndDataTypeOrderByChannelName(shotNo, dataType);
+                if (dbChannels != null && !dbChannels.isEmpty()) {
+                    List<String> channelNames = dbChannels.stream().map(c -> c.getChannelName()).collect(Collectors.toList());
+                    logger.info("从DB加载炮号{}的{}通道: {} 个，通道列表: {}", shotNo, dataType, channelNames.size(), channelNames);
+                    return channelNames;
+                }
+            } catch (Exception e) {
+                logger.warn("从DB读取通道元数据失败: {}", e.getMessage());
+            }
+        }
+
         // 尝试从JSON文件读取
         Path channelJsonFile = channelsBasePath.resolve("channels_" + shotNo + ".json");
         

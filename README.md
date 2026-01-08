@@ -75,7 +75,8 @@ mvn clean package -DskipTests
   打开 `frontend-example.html` 或 `src/main/resources/static/index.html`。
 
 ## 数据准备与辅助脚本
-- `extract_channels.py`：扫描 TDMS，生成 `channels/channels_*.json`，提供完整通道列表给后端。
+- `extract_channels.py`：扫描 TDMS，生成 `channels/channels_*.json`，提供完整通道列表给后端。  
+  **注：** 现在 `DataConsumer` 会在消费 `wave-data` 时将通道信息写入数据库 `channels` 表，`FileDataSource.getChannelNames()` 会优先读取该表（若存在），然后回退到 `channels/*.json`，最后使用默认通道。
 - `read_wave_data.py`：被 `FileDataSource` 调用，读取 TDMS 波形。
 - `data_publisher.py`：将本地文件数据发送到 Kafka，用于测试网络数据源。
 - `run_tests.sh`：编译、打包、启动应用并做 API 冒烟测试（使用默认端点 `/api/data/...`）。

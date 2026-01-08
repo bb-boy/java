@@ -1,1 +1,1 @@
-{"clusterId":"","leaderId":3,"leaderEpoch":22,"votedId":3,"appliedOffset":0,"currentVoters":[{"voterId":1},{"voterId":2},{"voterId":3}],"data_version":0}
+{"clusterId":"","leaderId":2,"leaderEpoch":1,"votedId":-1,"appliedOffset":0,"currentVoters":[{"voterId":1},{"voterId":2},{"voterId":3}],"data_version":0}

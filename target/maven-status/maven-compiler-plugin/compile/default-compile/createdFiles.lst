@@ -8,6 +8,7 @@ com/example/kafka/ingest/NetworkDataReceiver.class
 com/example/kafka/service/DataQueryService.class
 com/example/kafka/model/PlcInterlock.class
 com/example/kafka/service/DataService.class
+com/example/kafka/repository/ChannelRepository.class
 com/example/kafka/config/WebSocketConfig.class
 com/example/kafka/KafkaDemoApplication.class
 com/example/kafka/service/MessageProducer.class
@@ -31,6 +32,7 @@ com/example/kafka/consumer/DataConsumer.class
 com/example/kafka/controller/DatabaseController.class
 com/example/kafka/model/OperationLog.class
 com/example/kafka/model/WaveData$DataSourceType.class
+com/example/kafka/entity/ChannelEntity.class
 com/example/kafka/entity/PlcInterlockEntity.class
 com/example/kafka/repository/WaveDataRepository.class
 com/example/kafka/service/DataPipelineService$BatchSyncResult.class

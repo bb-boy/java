@@ -14,6 +14,7 @@ import org.springframework.stereotype.Service;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
+import java.time.OffsetDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -73,6 +74,24 @@ public class InfluxDBService {
             Instant baseTime = startTime != null 
                 ? startTime.atZone(ZoneId.systemDefault()).toInstant()
                 : Instant.now();
+
+            // 删除已有同 shot_no + channel_name 的数据，保证幂等性（避免重复写入）
+            // 使用足够宽的时间范围确保删除所有历史数据
+            try {
+                // 使用过去30天到未来1天的时间范围，覆盖所有可能的旧数据
+                OffsetDateTime startOdt = OffsetDateTime.now().minusDays(30);
+                OffsetDateTime endOdt = OffsetDateTime.now().plusDays(1);
+                String predicate = String.format(
+                    "_measurement=\"%s\" AND shot_no=\"%s\" AND channel_name=\"%s\"",
+                    MEASUREMENT_WAVEFORM, shotNo, channelName
+                );
+                influxDBClient.getDeleteApi().delete(startOdt, endOdt, predicate, bucket, org);
+                logger.debug("已删除旧数据: Shot={}, Channel={}, 删除范围=过去30天", 
+                            shotNo, channelName);
+            } catch (Exception e) {
+                logger.warn("删除旧数据失败(继续写入): Shot={}, Channel={}, 原因: {}", 
+                           shotNo, channelName, e.getMessage());
+            }
 
             List<Point> points = new ArrayList<>(Math.min(waveData.size(), BATCH_SIZE));
             

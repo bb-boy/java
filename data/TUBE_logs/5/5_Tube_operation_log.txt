@@ -1,5 +1,5 @@
 === TDMS Operation Log ===
-File      : data/TUBE/5/5_Tube.tdms
+File      : /home/igusa/java/data/TUBE/5/5_Tube.tdms
 Name      : 5_Tube
 ShotNo    : 5
 ShotNoSrc : tdms

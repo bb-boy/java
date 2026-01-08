@@ -1,3 +1,4 @@
+/home/igusa/java/src/main/java/com/example/kafka/entity/ChannelEntity.java
 /home/igusa/java/src/main/java/com/example/kafka/controller/KafkaController.java
 /home/igusa/java/src/main/java/com/example/kafka/datasource/NetworkDataSource.java
 /home/igusa/java/src/main/java/com/example/kafka/controller/DataController.java
@@ -14,6 +15,7 @@
 /home/igusa/java/src/main/java/com/example/kafka/repository/PlcInterlockRepository.java
 /home/igusa/java/src/main/java/com/example/kafka/controller/DataQueryController.java
 /home/igusa/java/src/main/java/com/example/kafka/consumer/DataConsumer.java
+/home/igusa/java/src/main/java/com/example/kafka/repository/ChannelRepository.java
 /home/igusa/java/src/main/java/com/example/kafka/producer/DataProducer.java
 /home/igusa/java/src/main/java/com/example/kafka/entity/OperationLogEntity.java
 /home/igusa/java/src/main/java/com/example/kafka/datasource/DataSource.java

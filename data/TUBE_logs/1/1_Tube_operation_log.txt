@@ -1,5 +1,5 @@
 === TDMS Operation Log ===
-File      : data/TUBE/1/1_Tube.tdms
+File      : TUBE/1/1_Tube.tdms
 Name      : 1_Tube
 ShotNo    : 1
 ShotNoSrc : tdms

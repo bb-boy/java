@@ -240,6 +240,10 @@ app:
     # PLC互锁日志路径
     plc:
       path: data/PLC_logs
+
+    # 通道元数据路径（默认：channels -> 修改为 data/channels）
+    channels:
+      path: data/channels  # merged from config/application.yml
     
     # 主数据源: file(文件) 或 network(网络/Kafka)
     source:

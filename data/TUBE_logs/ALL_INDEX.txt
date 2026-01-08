@@ -1,21 +1,3 @@
 === TDMS Batch Index ===
-[OK] ShotNo=2 | 正常完成 | actual=5.400s expected=5.000s | data/TUBE_logs/2/2_Tube_operation_log.txt
-[OK] ShotNo=4 | 正常完成 | actual=0.600s expected=0.020s | data/TUBE_logs/4/4_Tube_operation_log.txt
-[OK] ShotNo=15 | 正常完成 | actual=0.400s expected=nans | data/TUBE_logs/15/15_Tube_operation_log.txt
-[OK] ShotNo=1001 | 正常完成 | actual=7.400s expected=5.000s | data/TUBE_logs/1001/1001_Tube_operation_log.txt
-[OK] ShotNo=17 | 正常完成 | actual=0.600s expected=nans | data/TUBE_logs/17/17_Tube_operation_log.txt
-[OK] ShotNo=14 | 正常完成 | actual=0.600s expected=nans | data/TUBE_logs/14/14_Tube_operation_log.txt
-[OK] ShotNo=19 | 正常完成 | actual=0.600s expected=nans | data/TUBE_logs/19/19_Tube_operation_log.txt
-[OK] ShotNo=3 | 正常完成 | actual=0.400s expected=0.020s | data/TUBE_logs/3/3_Tube_operation_log.txt
-[OK] ShotNo=20 | 正常完成 | actual=1.200s expected=nans | data/TUBE_logs/20/20_Tube_operation_log.txt
-[OK] ShotNo=13 | 正常完成 | actual=0.600s expected=nans | data/TUBE_logs/13/13_Tube_operation_log.txt
-[OK] ShotNo=11 | 正常完成 | actual=10.400s expected=10.000s | data/TUBE_logs/11/11_Tube_operation_log.txt
-[OK] ShotNo=10 | 正常完成 | actual=10.400s expected=10.000s | data/TUBE_logs/10/10_Tube_operation_log.txt
-[OK] ShotNo=12 | 正常完成 | actual=0.600s expected=nans | data/TUBE_logs/12/12_Tube_operation_log.txt
-[OK] ShotNo=6 | 正常完成 | actual=15.400s expected=15.000s | data/TUBE_logs/6/6_Tube_operation_log.txt
-[OK] ShotNo=1 | 正常完成 | actual=10.400s expected=10.000s | data/TUBE_logs/1/1_Tube_operation_log.txt
-[OK] ShotNo=1000 | 正常完成 | actual=3.400s expected=1.000s | data/TUBE_logs/1000/1000_Tube_operation_log.txt
-[OK] ShotNo=100 | 正常完成 | actual=0.800s expected=nans | data/TUBE_logs/100/100_Tube_operation_log.txt
-[OK] ShotNo=16 | 正常完成 | actual=0.400s expected=nans | data/TUBE_logs/16/16_Tube_operation_log.txt
-[OK] ShotNo=18 | 正常完成 | actual=0.600s expected=nans | data/TUBE_logs/18/18_Tube_operation_log.txt
-[OK] ShotNo=5 | 正常完成 | actual=15.400s expected=15.000s | data/TUBE_logs/5/5_Tube_operation_log.txt
+[OK] ShotNo=5 | 正常完成 | actual=15.400s expected=15.000s | /home/igusa/java/data/TUBE_logs/5/5_Tube_operation_log.txt
+[ERR] /home/igusa/java/data/TUBE/5/5_Water.tdms | Missing channels ['NegVoltage', 'PosVoltage', 'FilaCurrent', 'FilaVoltage']

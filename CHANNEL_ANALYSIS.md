@@ -103,6 +103,11 @@ python extract_channels.py --all
 ```
 
 **输出示例** (`channels/channels_1.json`):
+
+> 说明：系统现在支持两种通道元数据来源（优先级：1. DB channels 表 2. channels JSON 文件 3. 默认通道列表）。
+> - `DataConsumer` 会在消费 `wave-data` 时把通道信息写入 `channels` 表（shotNo+channelName+dataType 唯一），作为长期查询来源。
+> - `extract_channels.py` 依旧用于快速生成 JSON 作为补丁或离线工具。
+
 ```json
 {
   "shotNo": 1,

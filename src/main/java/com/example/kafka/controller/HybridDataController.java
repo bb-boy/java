@@ -207,6 +207,7 @@ public class HybridDataController {
         }
         
         try {
+            // 简化查询：只取value字段，按时间排序后限制点数（避免超时）
             String flux = String.format(
                 "from(bucket: \"%s\") " +
                 "|> range(start: -30d) " +
@@ -215,7 +216,7 @@ public class HybridDataController {
                 "|> filter(fn: (r) => r.channel_name == \"%s\") " +
                 "|> filter(fn: (r) => r._field == \"value\") " +
                 "|> sort(columns: [\"_time\"]) " +
-                "|> limit(n: 20000)",  // 限制返回点数
+                "|> limit(n: 50000)",
                 bucket, shotNo, channelName
             );
             

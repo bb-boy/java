@@ -45,6 +45,9 @@ public class DataConsumer {
     
     @Autowired(required = false)
     private InfluxDBService influxDBService;
+
+    @Autowired
+    private com.example.kafka.repository.ChannelRepository channelRepository;
     
     private final ObjectMapper objectMapper;
     
@@ -167,6 +170,26 @@ public class DataConsumer {
             if (influxDBService != null) {
                 influxDBService.writeFromKafkaMessage(data);
                 logger.debug("波形数据已同步到InfluxDB: ShotNo={}, Channel={}", shotNo, channelName);
+            }
+
+            // 持久化/更新通道元数据到 channels 表（用于查询与前端显示）
+            try {
+                com.example.kafka.entity.ChannelEntity channelEntity = channelRepository
+                    .findByShotNoAndChannelNameAndDataType(shotNo, channelName, dataType)
+                    .orElse(new com.example.kafka.entity.ChannelEntity(shotNo, channelName, dataType));
+
+                channelEntity.setDataPoints(entity.getSamples());
+                Double sampleRate = entity.getSampleRate();
+                if (sampleRate != null && sampleRate > 0) {
+                    channelEntity.setSampleInterval(1.0 / sampleRate);
+                }
+                channelEntity.setFileSource(entity.getFileSource());
+                channelEntity.setLastUpdated(java.time.LocalDateTime.now());
+
+                channelRepository.save(channelEntity);
+                logger.debug("通道元数据已写入 channels 表: ShotNo={}, Channel={}", shotNo, channelName);
+            } catch (Exception e) {
+                logger.warn("写入通道元数据失败: ShotNo={}, Channel={} - {}", shotNo, channelName, e.getMessage());
             }
             
         } catch (Exception e) {

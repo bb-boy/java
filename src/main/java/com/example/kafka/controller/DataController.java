@@ -8,6 +8,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 import java.util.Map;
+import java.util.HashMap;
 
 /**
  * 数据查询控制器 - 提供REST API访问
@@ -78,6 +79,19 @@ public class DataController {
             @PathVariable Integer shotNo,
             @RequestParam(defaultValue = "Tube") String type) {
         return ResponseEntity.ok(dataService.getChannelNames(shotNo, type));
+    }
+
+    /**
+     * 获取指定炮号的所有通道（Tube & Water）
+     * GET /api/data/channels?shotNo=1
+     */
+    @GetMapping("/channels")
+    public ResponseEntity<Map<String, Object>> getAllChannels(@RequestParam Integer shotNo) {
+        Map<String, Object> result = new HashMap<>();
+        result.put("shotNo", shotNo);
+        result.put("Tube", dataService.getChannelNames(shotNo, "Tube"));
+        result.put("Water", dataService.getChannelNames(shotNo, "Water"));
+        return ResponseEntity.ok(result);
     }
     
     /**
