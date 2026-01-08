@@ -16,10 +16,12 @@
 /home/igusa/java/src/main/java/com/example/kafka/controller/DataQueryController.java
 /home/igusa/java/src/main/java/com/example/kafka/consumer/DataConsumer.java
 /home/igusa/java/src/main/java/com/example/kafka/repository/ChannelRepository.java
+/home/igusa/java/src/main/java/com/example/kafka/service/InfluxDBCleanupService.java
 /home/igusa/java/src/main/java/com/example/kafka/producer/DataProducer.java
 /home/igusa/java/src/main/java/com/example/kafka/entity/OperationLogEntity.java
 /home/igusa/java/src/main/java/com/example/kafka/datasource/DataSource.java
 /home/igusa/java/src/main/java/com/example/kafka/service/DataQueryService.java
+/home/igusa/java/src/main/java/com/example/kafka/controller/InfluxDBMaintenanceController.java
 /home/igusa/java/src/main/java/com/example/kafka/controller/WebSocketController.java
 /home/igusa/java/src/main/java/com/example/kafka/repository/WaveDataRepository.java
 /home/igusa/java/src/main/java/com/example/kafka/model/WaveData.java

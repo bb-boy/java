@@ -40,6 +40,11 @@ public interface WaveDataRepository extends JpaRepository<WaveDataEntity, Long> 
     List<WaveDataEntity> findByShotNo(Integer shotNo);
     
     /**
+     * 获取指定数据类型的所有波形数据
+     */
+    List<WaveDataEntity> findByDataType(String dataType);
+    
+    /**
      * 删除指定炮号的所有波形数据
      */
     void deleteByShotNo(Integer shotNo);

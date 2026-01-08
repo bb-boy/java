@@ -1,17 +1,17 @@
 0
 65
 __consumer_offsets 43 0
-__consumer_offsets 30 106507
+__consumer_offsets 30 139185
 __consumer_offsets 32 0
 shot-metadata 0 10
-shot-metadata 1 0
+shot-metadata 1 4
 __consumer_offsets 25 0
 __consumer_offsets 41 0
 __consumer_offsets 49 0
 __consumer_offsets 40 0
 __consumer_offsets 27 0
-__consumer_offsets 12 26659
-wave-data 2 124
+__consumer_offsets 12 34918
+wave-data 2 178
 __consumer_offsets 36 0
 __consumer_offsets 45 0
 __consumer_offsets 10 0
@@ -21,7 +21,7 @@ plc-interlock 1 0
 __consumer_offsets 20 0
 __consumer_offsets 18 0
 __consumer_offsets 48 0
-wave-data 0 138
+wave-data 0 196
 __consumer_offsets 23 0
 shot-metadata 2 2
 __consumer_offsets 42 0
@@ -37,7 +37,7 @@ __consumer_offsets 29 0
 __consumer_offsets 0 0
 __consumer_offsets 6 0
 __consumer_offsets 35 0
-__consumer_offsets 13 106596
+__consumer_offsets 13 139639
 __consumer_offsets 26 0
 __consumer_offsets 21 0
 __consumer_offsets 19 0
@@ -47,7 +47,7 @@ __consumer_offsets 8 0
 __consumer_offsets 24 0
 __consumer_offsets 3 0
 __consumer_offsets 17 0
-wave-data 1 167
+wave-data 1 213
 __consumer_offsets 39 0
 __consumer_offsets 2 0
 __consumer_offsets 44 0

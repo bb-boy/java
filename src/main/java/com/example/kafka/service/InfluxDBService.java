@@ -4,6 +4,8 @@ import com.influxdb.client.InfluxDBClient;
 import com.influxdb.client.WriteApiBlocking;
 import com.influxdb.client.domain.WritePrecision;
 import com.influxdb.client.write.Point;
+import com.influxdb.query.FluxRecord;
+import com.influxdb.query.FluxTable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -86,11 +88,25 @@ public class InfluxDBService {
                     MEASUREMENT_WAVEFORM, shotNo, channelName
                 );
                 influxDBClient.getDeleteApi().delete(startOdt, endOdt, predicate, bucket, org);
+                
+                // 等待删除操作传播(InfluxDB异步删除)
+                Thread.sleep(500);
+                
+                // 验证删除成功
+                long remainingRecords = countRecords(shotNo, channelName);
+                if (remainingRecords > 0) {
+                    throw new IllegalStateException(
+                        String.format("删除验证失败: 仍有%d条记录残留", remainingRecords)
+                    );
+                }
+                
                 logger.debug("已删除旧数据: Shot={}, Channel={}, 删除范围=过去30天", 
                             shotNo, channelName);
             } catch (Exception e) {
-                logger.warn("删除旧数据失败(继续写入): Shot={}, Channel={}, 原因: {}", 
+                logger.error("删除旧数据失败,终止写入: Shot={}, Channel={}, 错误={}", 
                            shotNo, channelName, e.getMessage());
+                // 删除失败则抛出异常,防止重复数据
+                throw new RuntimeException("InfluxDB删除失败,拒绝写入以防止数据重复", e);
             }
 
             List<Point> points = new ArrayList<>(Math.min(waveData.size(), BATCH_SIZE));
@@ -183,6 +199,37 @@ public class InfluxDBService {
         if (value instanceof Double) return (Double) value;
         if (value instanceof Number) return ((Number) value).doubleValue();
         return null;
+    }
+    
+    /**
+     * 统计指定shot_no和channel_name的记录数
+     * 用于删除验证和数据完整性检查
+     */
+    private long countRecords(Integer shotNo, String channelName) {
+        String flux = String.format(
+            "from(bucket: \"%s\") " +
+            "|> range(start: -30d) " +
+            "|> filter(fn: (r) => r._measurement == \"waveform\") " +
+            "|> filter(fn: (r) => r.shot_no == \"%d\") " +
+            "|> filter(fn: (r) => r.channel_name == \"%s\") " +
+            "|> filter(fn: (r) => r._field == \"value\") " +
+            "|> count()",
+            bucket, shotNo, channelName
+        );
+        
+        try {
+            List<FluxTable> tables = influxDBClient.getQueryApi().query(flux, org);
+            if (tables.isEmpty() || tables.get(0).getRecords().isEmpty()) {
+                return 0;
+            }
+            
+            FluxRecord record = tables.get(0).getRecords().get(0);
+            return ((Number) record.getValue()).longValue();
+        } catch (Exception e) {
+            logger.warn("记录计数失败: shot_no={}, channel_name={}, 错误={}", 
+                shotNo, channelName, e.getMessage());
+            return -1; // 返回-1表示计数失败
+        }
     }
 
     private LocalDateTime parseDateTime(Object value) {

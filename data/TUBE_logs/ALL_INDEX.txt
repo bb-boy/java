@@ -1,3 +1,3 @@
 === TDMS Batch Index ===
-[OK] ShotNo=5 | 正常完成 | actual=15.400s expected=15.000s | /home/igusa/java/data/TUBE_logs/5/5_Tube_operation_log.txt
-[ERR] /home/igusa/java/data/TUBE/5/5_Water.tdms | Missing channels ['NegVoltage', 'PosVoltage', 'FilaCurrent', 'FilaVoltage']
+[OK] ShotNo=6 | 正常完成 | actual=15.400s expected=15.000s | /home/igusa/java/data/TUBE_logs/6/6_Tube_operation_log.txt
+[ERR] /home/igusa/java/data/TUBE/6/6_Water.tdms | Missing channels ['NegVoltage', 'PosVoltage', 'FilaCurrent', 'FilaVoltage']

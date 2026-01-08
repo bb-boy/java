@@ -8,12 +8,16 @@ import com.example.kafka.repository.ShotMetadataRepository;
 import com.example.kafka.repository.WaveDataRepository;
 import com.example.kafka.service.InfluxDBService;
 import com.influxdb.client.InfluxDBClient;
+import com.influxdb.query.FluxRecord;
 import com.influxdb.query.FluxTable;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.Instant;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -28,6 +32,8 @@ import java.util.stream.Collectors;
 @RequestMapping("/api/hybrid")
 @CrossOrigin(origins = "*")
 public class HybridDataController {
+    
+    private static final Logger logger = LoggerFactory.getLogger(HybridDataController.class);
     
     @Autowired
     private ShotMetadataRepository metadataRepository;
@@ -222,24 +228,53 @@ public class HybridDataController {
             
             List<FluxTable> tables = influxDBClient.getQueryApi().query(flux, org);
             
-            List<Double> values = new ArrayList<>();
-            List<String> timestamps = new ArrayList<>();
+            // 使用LinkedHashMap进行时间戳去重(保持顺序,相同时间戳只保留最后一个值)
+            Map<Long, Double> dedupMap = new LinkedHashMap<>();
+            int rawCount = 0;
             
-            tables.stream()
-                .flatMap(table -> table.getRecords().stream())
-                .forEach(record -> {
+            for (FluxTable table : tables) {
+                for (FluxRecord record : table.getRecords()) {
+                    rawCount++;
                     Object value = record.getValue();
-                    if (value instanceof Number) {
-                        values.add(((Number) value).doubleValue());
-                        timestamps.add(record.getTime().toString());
+                    Instant timestamp = record.getTime();
+                    if (value instanceof Number && timestamp != null) {
+                        // 使用纳秒时间戳作为key实现精确去重
+                        long nanos = timestamp.getEpochSecond() * 1_000_000_000 + timestamp.getNano();
+                        dedupMap.put(nanos, ((Number) value).doubleValue());
                     }
-                });
+                }
+            }
+            
+            // 转换为列表(已去重并保持时间顺序)
+            List<Double> values = new ArrayList<>(dedupMap.values());
+            double duplicationRate = rawCount > 0 ? (double) rawCount / values.size() : 1.0;
+            
+            if (duplicationRate > 1.05) {  // 重复率超过5%时告警
+                logger.warn("检测到数据重复: shot_no={}, channel_name={}, 原始点数={}, 去重后={}, 重复率={}x", 
+                    shotNo, channelName, rawCount, values.size(), 
+                    Math.round(duplicationRate * 100.0) / 100.0);
+            }
             
             result.put("shotNo", shotNo);
             result.put("channelName", channelName);
             result.put("data", values);
+            result.put("samples", values.size());          // 去重后的点数
+            result.put("rawSamples", rawCount);            // 原始点数
+            result.put("duplicationRate", Math.round(duplicationRate * 100.0) / 100.0);
+            
+            logger.debug("InfluxDB查询完成: shot_no={}, channel_name={}, 原始点数={}, 去重后={}", 
+                shotNo, channelName, rawCount, values.size());
+            
+            // 保留原有的timestamps字段(用于调试)
+            List<String> timestamps = new ArrayList<>();
+            tables.stream()
+                .flatMap(table -> table.getRecords().stream())
+                .forEach(record -> {
+                    if (record.getTime() != null) {
+                        timestamps.add(record.getTime().toString());
+                    }
+                });
             result.put("timestamps", timestamps);
-            result.put("samples", values.size());
             result.put("source", "influxdb");
             
         } catch (Exception e) {
