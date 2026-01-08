@@ -65,6 +65,37 @@ mvn clean package -DskipTests
   确保 Kafka 已启动（可用上面的 docker compose）。
   ```bash
   ./start-network-source.sh
+
+# 一键管理脚本
+- 新增：`scripts/projectctl.sh` 可一键启动/停止/重启/查看状态整个项目（包含 Docker services、Java 应用以及文件模式的 watcher）。
+
+用法示例：
+
+- 启动（网络模式 - 默认）：
+
+  ```bash
+  ./scripts/projectctl.sh start --mode network
+  ```
+
+- 启动（文件模式，使用本地文件源）：
+
+  ```bash
+  ./scripts/projectctl.sh start --mode file
+  ```
+
+- 停止：
+
+  ```bash
+  ./scripts/projectctl.sh stop
+  ```
+
+- 查看状态：
+
+  ```bash
+  ./scripts/projectctl.sh status
+  ```
+
+注：脚本会把应用日志写入 `logs/app.log`，并在 `run/` 中存放 pid 文件。
   # 或者
   java -jar target/kafka-demo-1.0.0.jar \
     --app.data.source.primary=network \
