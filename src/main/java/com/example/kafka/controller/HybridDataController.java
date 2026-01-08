@@ -1,9 +1,11 @@
 package com.example.kafka.controller;
 
 import com.example.kafka.entity.OperationLogEntity;
+import com.example.kafka.entity.PlcInterlockEntity;
 import com.example.kafka.entity.ShotMetadataEntity;
 import com.example.kafka.entity.WaveDataEntity;
 import com.example.kafka.repository.OperationLogRepository;
+import com.example.kafka.repository.PlcInterlockRepository;
 import com.example.kafka.repository.ShotMetadataRepository;
 import com.example.kafka.repository.WaveDataRepository;
 import com.example.kafka.service.InfluxDBService;
@@ -43,6 +45,9 @@ public class HybridDataController {
     
     @Autowired
     private OperationLogRepository operationLogRepository;
+    
+    @Autowired
+    private PlcInterlockRepository plcInterlockRepository;
     
     @Autowired(required = false)
     private InfluxDBClient influxDBClient;
@@ -334,6 +339,33 @@ public class HybridDataController {
                 result.put("waveformError", e.getMessage());
             }
         }
+        
+        // MySQL: 获取操作日志
+        List<OperationLogEntity> operationLogs = operationLogRepository.findByShotNoOrderByTimestampAsc(shotNo);
+        result.put("operationLogs", operationLogs.stream().map(log -> {
+            Map<String, Object> logMap = new HashMap<>();
+            logMap.put("timestamp", log.getTimestamp());
+            logMap.put("operationType", log.getOperationType());
+            logMap.put("channelName", log.getChannelName());
+            logMap.put("oldValue", log.getOldValue());
+            logMap.put("newValue", log.getNewValue());
+            logMap.put("delta", log.getDelta());
+            logMap.put("confidence", log.getConfidence());
+            return logMap;
+        }).collect(Collectors.toList()));
+        
+        // MySQL: 获取PLC互锁日志
+        List<PlcInterlockEntity> plcInterlocks = plcInterlockRepository.findByShotNoOrderByTimestampAsc(shotNo);
+        result.put("plcInterlocks", plcInterlocks.stream().map(plc -> {
+            Map<String, Object> plcMap = new HashMap<>();
+            plcMap.put("timestamp", plc.getTimestamp());
+            plcMap.put("interlockName", plc.getInterlockName());
+            plcMap.put("status", plc.getStatus());
+            plcMap.put("currentValue", plc.getCurrentValue());
+            plcMap.put("threshold", plc.getThreshold());
+            plcMap.put("description", plc.getDescription());
+            return plcMap;
+        }).collect(Collectors.toList()));
         
         return ResponseEntity.ok(result);
     }
