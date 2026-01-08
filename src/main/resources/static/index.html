@@ -162,7 +162,7 @@
                 log(`正在加载炮号 ${shotNo} 的数据...`);
                 document.getElementById('status').innerHTML = '<div>⏳ 加载中，请稍候...</div>';
                 
-                // 使用混合API加载数据 (数据来自MySQL + InfluxDB)
+                // 使用混合API加载数据
                 const response = await fetch(`${API_BASE}/shots/${shotNo}`);
                 if (!response.ok) throw new Error(`HTTP ${response.status}`);
                 
