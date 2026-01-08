@@ -49,21 +49,29 @@ parse_args() {
 }
 
 start_docker() {
-  if ! command -v docker &> /dev/null || ! command -v docker-compose &> /dev/null; then
-    echo "Docker or docker-compose not available: skipping docker start"
+  if ! command -v docker &> /dev/null; then
+    echo "Docker not available: skipping docker start"
+    return
+  fi
+  if [ ! -f "$DOCKER_DIR/docker-compose.yml" ]; then
+    echo "docker-compose.yml not found in $DOCKER_DIR: skipping docker start"
     return
   fi
   echo "Starting Docker services (docker-compose up -d)..."
-  (cd "$DOCKER_DIR" && docker-compose up -d)
+  (cd "$DOCKER_DIR" && docker compose up -d || docker-compose up -d)
 }
 
 stop_docker() {
-  if ! command -v docker &> /dev/null || ! command -v docker-compose &> /dev/null; then
-    echo "Docker or docker-compose not available: skipping docker stop"
+  if ! command -v docker &> /dev/null; then
+    echo "Docker not available: skipping docker stop"
+    return
+  fi
+  if [ ! -f "$DOCKER_DIR/docker-compose.yml" ]; then
+    echo "docker-compose.yml not found in $DOCKER_DIR: skipping docker stop"
     return
   fi
   echo "Stopping Docker services (docker-compose down)..."
-  (cd "$DOCKER_DIR" && docker-compose down)
+  (cd "$DOCKER_DIR" && docker compose down || docker-compose down)
 }
 
 build_jar() {
@@ -144,19 +152,21 @@ stop_watcher() {
 
 status() {
   echo "==== Docker Compose Services (if available) ===="
-  if command -v docker-compose &> /dev/null; then
-    (cd "$DOCKER_DIR" && docker-compose ps)
+  if [ -f "$DOCKER_DIR/docker-compose.yml" ] && command -v docker &> /dev/null; then
+    (cd "$DOCKER_DIR" && (docker compose ps || docker-compose ps))
   else
-    echo "docker-compose not found"
+    echo "docker-compose.yml not found or docker not available"
   fi
-  echo "\n==== Java App ===="
+  echo ""
+  echo "==== Java App ===="
   if [ -f "$APP_PID_FILE" ] && kill -0 "$(cat "$APP_PID_FILE")" 2>/dev/null; then
     echo "App running: PID $(cat "$APP_PID_FILE"), tail of log:"
     tail -n 20 "$APP_LOG_FILE" || true
   else
     echo "App not running"
   fi
-  echo "\n==== Watcher (file mode) ===="
+  echo ""
+  echo "==== Watcher (file mode) ===="
   if [ -f "$WATCHER_PID_FILE" ] && kill -0 "$(cat "$WATCHER_PID_FILE")" 2>/dev/null; then
     echo "Watcher running: PID $(cat "$WATCHER_PID_FILE")"
   else
