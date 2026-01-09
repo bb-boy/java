@@ -3,6 +3,7 @@
 .spen-workflow/
 # Ignore IDE/temp files
 *.log
+app.log
 *.tmp
 # Ignore runtime and log directories
 run/
