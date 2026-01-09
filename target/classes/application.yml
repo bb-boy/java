@@ -1,0 +1,274 @@
+# Spring Boot应用配置文件（YAML格式）
+# YAML是一种数据序列化语言，比XML、JSON更简洁
+# 使用缩进表示层级关系，注意：必须使用空格，不能使用Tab
+
+spring:
+  application:
+    # 应用名称，用于标识这个应用
+    # 在分布式系统中，可以用于服务发现、日志追踪等
+    name: wave-data-viewer
+
+  # ==================== 数据库配置 ====================
+  # 使用MySQL持久化数据库
+  datasource:
+    # MySQL数据库
+    url: jdbc:mysql://localhost:3306/wavedb?useUnicode=true&characterEncoding=utf-8&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    username: root
+    password: devroot
+    
+    # H2内存数据库 (已禁用)
+    # url: jdbc:h2:mem:wavedb;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE
+    # driver-class-name: org.h2.Driver
+    # username: sa
+    # password:
+  
+  # H2控制台 (已禁用)
+  h2:
+    console:
+      enabled: false
+      path: /h2-console
+  
+  # JPA配置
+  jpa:
+    hibernate:
+      ddl-auto: update  # 自动创建/更新表结构
+    show-sql: false     # 是否打印SQL
+    properties:
+      hibernate:
+        format_sql: true
+        dialect: org.hibernate.dialect.MySQL8Dialect
+        # H2使用: org.hibernate.dialect.H2Dialect
+
+  # ==================== Kafka配置 ====================
+  # Spring Boot会根据这些配置自动创建KafkaTemplate、消费者等Bean
+  kafka:
+    
+    # Kafka集群的地址列表
+    # bootstrap-servers: 引导服务器，用于初始连接
+    # 格式：host1:port1,host2:port2,host3:port3
+    # 
+    # 为什么有3个地址？
+    # - 我们的Docker Compose启动了3个Kafka节点（kafka1, kafka2, kafka3）
+    # - 19092、29092、39092是映射到宿主机的端口
+    # - 客户端只需要连接任意一个节点，就能访问整个集群
+    # 
+    # 容错机制：
+    # - 如果kafka1挂了，会自动连接到kafka2或kafka3
+    # - 至少提供2个地址，提高容错能力
+    bootstrap-servers: localhost:19092,localhost:29092,localhost:39092
+    
+    # ==================== 生产者配置 ====================
+    producer:
+      
+      # 序列化器：将Java对象转换为字节数组
+      # Key的序列化器
+      # StringSerializer: 将String转换为UTF-8字节数组
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      
+      # Value（消息内容）的序列化器
+      # 如果要发送JSON对象，可以使用JsonSerializer
+      value-serializer: org.apache.kafka.common.serialization.StringSerializer
+      
+      # acks（acknowledgments）：消息确认级别
+      # 控制生产者要求多少个副本确认消息写入成功
+      # 
+      # 可选值：
+      # - 0: 不等待确认（最快，但可能丢失消息）
+      # - 1: 等待Leader副本确认（平衡性能和可靠性）
+      # - all/-1: 等待所有ISR副本确认（最安全，但最慢）
+      # 
+      # 我们使用"all"，保证最高的数据可靠性
+      acks: all
+      
+      # 重试次数
+      # 如果发送失败（网络错误、Leader选举等），自动重试
+      # retries=3: 最多重试3次
+      # 结合幂等性（enable.idempotence=true），保证不会重复发送
+      retries: 3
+      
+      # 批量发送大小（字节）
+      # 16384 = 16KB
+      # 
+      # 工作原理：
+      # - 生产者会缓存消息，当累积到16KB时批量发送
+      # - 减少网络请求次数，提高吞吐量
+      # - 如果消息很小，可以减小这个值
+      # - 如果消息很大，可以增大这个值
+      batch-size: 16384
+      
+      # linger.ms：等待时间（毫秒）
+      # 10ms: 等待10毫秒收集更多消息后再发送
+      # 
+      # 权衡：
+      # - 增加linger.ms：提高吞吐量，但增加延迟
+      # - 减小linger.ms：降低延迟，但降低吞吐量
+      # - 0：立即发送，不等待（实时性最高）
+      linger-ms: 10
+      
+      # 压缩类型
+      # snappy: Google开发的压缩算法
+      # 
+      # 可选值：
+      # - none: 不压缩
+      # - gzip: 压缩率高，但CPU占用高
+      # - snappy: 压缩率中等，CPU占用低（推荐）
+      # - lz4: 压缩速度快，压缩率中等
+      # - zstd: 压缩率高，速度快（Kafka 2.1.0+）
+      # 
+      # 压缩的好处：
+      # - 减少网络传输量
+      # - 减少磁盘占用
+      # - 提高吞吐量
+      compression-type: snappy
+      
+    # ==================== 消费者配置 ====================
+    consumer:
+      
+      # 反序列化器：将字节数组转换为Java对象
+      # Key的反序列化器（与生产者的序列化器对应）
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      
+      # Value的反序列化器
+      # 如果生产者发送的是JSON，这里要使用JsonDeserializer
+      value-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      
+      # 消费者组ID
+      # 同一个组内的消费者会分担消息（负载均衡）
+      # 不同组的消费者会各自接收全部消息（广播）
+      group-id: data-consumer-group-v2
+      
+      # auto-offset-reset: offset重置策略
+      # 当找不到消费者的offset时（第一次启动或offset过期），从哪里开始消费
+      # 
+      # 可选值：
+      # - earliest: 从最早的消息开始消费（从头开始）
+      # - latest: 从最新的消息开始消费（只消费新消息）
+      # - none: 如果找不到offset，抛出异常
+      # 
+      # 我们使用"earliest"，确保不会丢失任何消息
+      auto-offset-reset: earliest
+      
+      # 是否自动提交offset
+      # true: Spring Kafka定期自动提交offset
+      # false: 需要手动调用commit方法
+      # 
+      # 自动提交的优缺点：
+      # 优点：简单，不需要额外代码
+      # 缺点：如果消息处理失败，offset已提交，消息会丢失
+      # 
+      # 手动提交的优缺点：
+      # 优点：更可靠，处理成功后再提交
+      # 缺点：需要更多代码，可能重复消费
+      enable-auto-commit: true
+      
+      # 自动提交的间隔时间（毫秒）
+      # 1000ms = 1秒
+      # 每1秒自动提交一次offset到Kafka
+      auto-commit-interval: 1000
+
+# ==================== 日志配置 ====================
+logging:
+  # 日志级别配置
+  # 日志级别从低到高：TRACE < DEBUG < INFO < WARN < ERROR
+  level:
+    root: INFO                    # 全局默认级别：INFO
+                                  # 只显示INFO及以上级别的日志
+    
+    com.example.kafka: DEBUG      # 我们自己的代码：DEBUG级别
+                                  # 显示详细的调试信息
+    
+    org.apache.kafka: WARN        # Kafka客户端：WARN级别
+                                  # 只显示警告和错误，减少日志输出
+    
+    org.springframework.kafka: INFO  # Spring Kafka：INFO级别
+                                     # 显示重要的运行信息
+  
+  # 日志输出格式
+  pattern:
+    # 控制台输出格式
+    # %d{HH:mm:ss.SSS}: 时间，格式：时:分:秒.毫秒
+    # [%thread]: 线程名称
+    # %-5level: 日志级别，左对齐，占5个字符
+    # %logger{36}: 日志记录器名称，最多36个字符
+    # %msg: 日志消息内容
+    # %n: 换行符
+    # 
+    # 示例输出：
+    # 21:42:30.295 [kafka-consumer-1] INFO  c.e.kafka.service.MessageConsumer - 收到消息
+    console: "%d{HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n"
+
+# ==================== 服务器配置 ====================
+server:
+  # HTTP服务器监听端口
+  # 应用启动后，可以通过 http://localhost:8080 访问
+  # 如果8080被占用，可以改为其他端口，如8081、9090等
+  port: 8080
+
+# ==================== 配置文件说明 ====================
+# 
+# 这个配置文件会被Spring Boot自动加载
+# Spring Boot会根据这些配置创建相应的Bean：
+# 1. KafkaTemplate<String, String> - 用于发送消息
+# 2. ConsumerFactory - 用于创建消费者
+# 3. 监听器容器 - 运行@KafkaListener方法
+# 
+# 配置的优先级：
+# 1. 命令行参数：java -jar app.jar --server.port=9090
+# 2. 系统环境变量：SPRING_KAFKA_BOOTSTRAP_SERVERS=localhost:9092
+# 3. application.yml或application.properties
+# 4. 默认值
+# 
+# 多环境配置：
+# - application-dev.yml：开发环境
+# - application-test.yml：测试环境
+# - application-prod.yml：生产环境
+# 通过 spring.profiles.active=dev 激活
+
+# ==================== 应用自定义配置 ====================
+app:
+  # 数据源配置
+  data:
+    # TDMS波形文件路径
+    tube:
+      path: data/TUBE
+    
+    # 操作日志路径
+    logs:
+      path: data/TUBE_logs
+    
+    # PLC互锁日志路径
+    plc:
+      path: data/PLC_logs
+
+    # 通道元数据路径（默认：channels -> 修改为 data/channels）
+    channels:
+      path: data/channels  # merged from config/application.yml
+    
+    # 主数据源: file(文件) 或 network(网络/Kafka)
+    source:
+      primary: file
+      fallback: true  # 是否启用备用数据源
+  
+  # Kafka主题配置
+  kafka:
+    topic:
+      metadata: shot-metadata      # 炮号元数据主题
+      wavedata: wave-data          # 波形数据主题
+      operation: operation-log     # 操作日志主题
+      plc: plc-interlock          # PLC互锁主题
+    
+    group-id: data-consumer-group-v2   # 消费者组ID
+  
+  # 网络接收器配置
+  network:
+    enabled: false      # 是否启用TCP服务器接收数据
+    port: 9999         # TCP服务器端口
+  
+  # InfluxDB时序数据库配置
+  influxdb:
+    enabled: true                           # 是否启用InfluxDB存储波形数据
+    url: http://localhost:8086              # InfluxDB服务地址
+    token: my-super-secret-token            # API Token
+    org: wavedata                           # 组织名称
+    bucket: waveforms                       # Bucket名称(存储波形数据)
