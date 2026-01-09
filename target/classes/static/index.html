@@ -163,7 +163,7 @@
                 document.getElementById('status').innerHTML = '<div>⏳ 加载中，请稍候...</div>';
                 
                 // 使用混合API加载数据
-                const response = await fetch(`${API_BASE}/shot/${shotNo}`);
+                const response = await fetch(`${API_BASE}/shots/${shotNo}`);
                 if (!response.ok) throw new Error(`HTTP ${response.status}`);
                 
                 const data = await response.json();
@@ -198,13 +198,21 @@
         
         async function loadWaveform(shotNo, channelName, allChannels) {
             try {
-                const response = await fetch(`${API_BASE}/waveform?shotNo=${shotNo}&channelName=${encodeURIComponent(channelName)}`);
-                if (!response.ok) throw new Error(`HTTP ${response.status}`);
+                // 同时获取波形数据和操作日志时间范围
+                const [waveResponse, timelineResponse] = await Promise.all([
+                    fetch(`${API_BASE}/waveform?shotNo=${shotNo}&channelName=${encodeURIComponent(channelName)}`),
+                    fetch(`${API_BASE}/timeline/${shotNo}`)
+                ]);
                 
-                const waveData = await response.json();
+                if (!waveResponse.ok) throw new Error(`HTTP ${waveResponse.status}`);
+                
+                const waveData = await waveResponse.json();
+                const timelineData = timelineResponse.ok ? await timelineResponse.json() : null;
+                
                 log(`✅ 波形数据加载成功: ${waveData.samples} 个采样点`);
                 
-                displayWaveformFromInflux(waveData, allChannels);
+                // 传递操作日志时间范围给显示函数
+                displayWaveformFromInflux(waveData, allChannels, timelineData);
             } catch (error) {
                 showError('加载波形失败: ' + error.message);
             }
@@ -262,7 +270,7 @@
             log('✅ 元数据显示完成');
         }
 
-        function displayWaveformFromInflux(waveData, allChannels) {
+        function displayWaveformFromInflux(waveData, allChannels, timelineData) {
             if (!waveData || !waveData.data || waveData.data.length === 0) {
                 log('⚠️ 无波形数据');
                 chart.setOption({
@@ -270,6 +278,50 @@
                     series: []
                 });
                 return;
+            }
+            
+            // 准备时间轴数据
+            let xAxisData = [];
+            let xAxisType = 'category';
+            let xAxisName = '采样点';
+            
+            // 如果有操作日志时间范围，使用操作日志的时间区间
+            if (timelineData && timelineData.events && timelineData.events.length > 0) {
+                // 获取操作日志的时间范围
+                const eventTimes = timelineData.events.map(e => new Date(e.timestamp).getTime());
+                const logStartTime = Math.min(...eventTimes);
+                const logEndTime = Math.max(...eventTimes);
+                const logDuration = logEndTime - logStartTime;
+                
+                // 计算波形数据的总时长（基于采样点数量）
+                const waveCount = waveData.data.length;
+                
+                // 将波形数据均匀分布在操作日志的时间区间内
+                xAxisData = waveData.data.map((_, i) => {
+                    return logStartTime + (logDuration * i / (waveCount - 1));
+                });
+                
+                xAxisType = 'time';
+                xAxisName = '时间';
+                log(`✅ 使用操作日志时间区间: ${new Date(logStartTime).toLocaleTimeString()} - ${new Date(logEndTime).toLocaleTimeString()}`);
+            } else if (waveData.timestamps && waveData.timestamps.length > 0) {
+                // 回退：使用波形自带的时间戳
+                const timeData = waveData.timestamps.map((ts, i) => ({
+                    time: new Date(ts).getTime(),
+                    value: waveData.data[i],
+                    timestamp: ts
+                }));
+                
+                timeData.sort((a, b) => a.time - b.time);
+                xAxisData = timeData.map(d => d.time);
+                const sortedValues = timeData.map(d => d.value);
+                waveData.data = sortedValues;
+                
+                xAxisType = 'time';
+                xAxisName = '时间';
+            } else {
+                // 否则使用采样点索引
+                xAxisData = waveData.data.map((_, i) => i);
             }
             
             // 显示单个通道的波形
@@ -281,8 +333,20 @@
                 tooltip: {
                     trigger: 'axis',
                     formatter: function(params) {
-                        return `采样点: ${params[0].dataIndex}<br/>` +
-                               `数值: ${params[0].data.toFixed(6)}`;
+                        if (xAxisType === 'time') {
+                            const time = new Date(params[0].value[0]);
+                            const timeStr = time.toLocaleString('zh-CN', {
+                                hour: '2-digit',
+                                minute: '2-digit',
+                                second: '2-digit',
+                                fractionalSecondDigits: 3
+                            });
+                            return `时间: ${timeStr}<br/>` +
+                                   `数值: ${params[0].value[1].toFixed(6)}`;
+                        } else {
+                            return `采样点: ${params[0].dataIndex}<br/>` +
+                                   `数值: ${params[0].data.toFixed(6)}`;
+                        }
                     }
                 },
                 toolbox: {
@@ -301,9 +365,19 @@
                     end: 100
                 }],
                 xAxis: { 
-                    type: 'category',
-                    name: '采样点',
-                    data: waveData.data.map((_, i) => i)
+                    type: xAxisType,
+                    name: xAxisName,
+                    data: xAxisType === 'category' ? xAxisData : undefined,
+                    axisLabel: xAxisType === 'time' ? {
+                        formatter: function(value) {
+                            const date = new Date(value);
+                            return date.toLocaleTimeString('zh-CN', { 
+                                hour: '2-digit', 
+                                minute: '2-digit',
+                                second: '2-digit'
+                            });
+                        }
+                    } : undefined
                 },
                 yAxis: { 
                     type: 'value',
@@ -312,7 +386,9 @@
                 series: [{
                     name: waveData.channelName,
                     type: 'line',
-                    data: waveData.data,
+                    data: xAxisType === 'time' ? 
+                        xAxisData.map((time, i) => [time, waveData.data[i]]) : 
+                        waveData.data,
                     sampling: 'lttb',
                     lineStyle: { width: 1 },
                     symbol: 'none'
@@ -320,7 +396,7 @@
             };
             
             chart.setOption(option);
-            log(`✅ 波形显示完成: ${waveData.samples}个点`);
+            log(`✅ 波形显示完成: ${waveData.samples}个点 ${xAxisType === 'time' ? '(使用时间轴)' : '(使用采样点)'}`);
             
             // 高亮当前选中的通道
             document.querySelectorAll('.channel-item').forEach(item => {
@@ -344,9 +420,13 @@
                 log(`✅ 加载到 ${data.totalEvents} 个操作事件`);
                 
                 if (data.totalEvents === 0) {
+                    // 清除旧数据，显示无操作日志
                     timelineChart.setOption({
-                        title: { text: `炮号 ${shotNo} - 无操作日志`, left: 'center', textStyle: { fontSize: 14 } }
-                    });
+                        title: { text: `炮号 ${shotNo} - 无操作日志`, left: 'center', textStyle: { fontSize: 14 } },
+                        xAxis: { type: 'time', show: false },
+                        yAxis: { show: false },
+                        series: []  // 清空系列数据
+                    }, true);  // true = 不合并，完全替换
                     return;
                 }
                 
