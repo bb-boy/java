@@ -1,9 +1,14 @@
-.krio/
+.kiro/
 .vscode/
-.spen-workflow/
+.spec-workflow/
+.github/workflows/
+.kiro/specs/my-feature
 # Ignore IDE/temp files
 *.log
+app.log
 *.tmp
 # Ignore runtime and log directories
 run/
 logs/
+# Do not track this .gitignore file itself
+.gitignore
