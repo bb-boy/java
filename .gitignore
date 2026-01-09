@@ -1,0 +1,9 @@
+.krio/
+.vscode/
+.spen-workflow/
+# Ignore IDE/temp files
+*.log
+*.tmp
+# Ignore runtime and log directories
+run/
+logs/
