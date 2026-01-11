@@ -327,7 +327,7 @@
             // 显示单个通道的波形
             const option = {
                 title: { 
-                    text: `波形数据 - ${waveData.channelName} (来自InfluxDB)`,
+                    text: `波形数据 - ${waveData.channelName} (来自InfluxDB) - ${waveData.samples}个采样点`,
                     left: 'center'
                 },
                 tooltip: {
@@ -410,6 +410,37 @@
             });
         }
         
+        // 颜色映射函数：基于delta值
+        function getColorByDelta(delta) {
+            if (delta === null || delta === undefined) return '#1890ff';
+            if (delta > 0) return '#ff4d4f';  // 红色 - 参数增加
+            if (delta < 0) return '#52c41a';  // 绿色 - 参数减少
+            return '#1890ff';  // 蓝色 - 无变化
+        }
+
+        // 大小映射函数：基于delta绝对值和最大变化量
+        function getSizeByDelta(delta, maxAbsDelta) {
+            const minSize = 10;
+            const maxSize = 40;
+            if (!delta || !maxAbsDelta || maxAbsDelta === 0) return minSize;
+            const normalizedSize = Math.abs(delta) / maxAbsDelta;
+            return minSize + (maxSize - minSize) * normalizedSize;
+        }
+
+        // 格式化变化量显示
+        function formatDelta(delta) {
+            if (delta === null || delta === undefined) return 'N/A';
+            const sign = delta > 0 ? '+' : '';
+            return `${sign}${delta.toFixed(3)}`;
+        }
+
+        // 格式化百分比显示
+        function formatPercent(percent) {
+            if (percent === null || percent === undefined) return 'N/A';
+            const sign = percent > 0 ? '+' : '';
+            return `${sign}${percent.toFixed(2)}%`;
+        }
+        
         async function loadTimeline(shotNo) {
             try {
                 log(`正在加载炮号 ${shotNo} 的操作日志时间线...`);
@@ -420,27 +451,38 @@
                 log(`✅ 加载到 ${data.totalEvents} 个操作事件`);
                 
                 if (data.totalEvents === 0) {
-                    // 清除旧数据，显示无操作日志
                     timelineChart.setOption({
                         title: { text: `炮号 ${shotNo} - 无操作日志`, left: 'center', textStyle: { fontSize: 14 } },
                         xAxis: { type: 'time', show: false },
                         yAxis: { show: false },
-                        series: []  // 清空系列数据
-                    }, true);  // true = 不合并，完全替换
+                        series: []
+                    }, true);
                     return;
                 }
                 
-                // 准备时间线数据
+                // 计算最大变化量用于大小归一化
+                const deltas = data.events.map(event => Math.abs(event.delta || 0));
+                const maxAbsDelta = Math.max(...deltas, 0.001); // 确保不为0
+                log(`✅ 最大变化量: ${maxAbsDelta}`);
+                
+                // 准备增强的时间线数据
                 const timelineData = data.events.map(event => ({
                     name: event.operation || '操作',
                     value: [
                         event.timestamp,
                         0,
                         event.channelName || '',
-                        event.description || '',
-                        event.status || '',
-                        event.duration || ''
-                    ]
+                        event.stepType || '',
+                        event.oldValue,
+                        event.newValue,
+                        event.delta,
+                        event.changePercent
+                    ],
+                    // 直接在数据项中设置样式
+                    itemStyle: {
+                        color: getColorByDelta(event.delta)
+                    },
+                    symbolSize: getSizeByDelta(event.delta, maxAbsDelta)
                 }));
                 
                 const option = {
@@ -449,22 +491,39 @@
                         left: 'center',
                         textStyle: { fontSize: 14 }
                     },
+                    legend: {
+                        data: ['参数增加', '参数减少', '无变化'],
+                        left: 'left',
+                        top: 'top',
+                        itemGap: 15,
+                        textStyle: { fontSize: 12 }
+                    },
                     tooltip: {
                         trigger: 'item',
                         formatter: function(params) {
                             const d = params.data;
+                            const [timestamp, , channelName, stepType, oldValue, newValue, delta, changePercent] = d.value;
+                            const time = new Date(timestamp).toLocaleTimeString('zh-CN', {
+                                hour: '2-digit',
+                                minute: '2-digit',
+                                second: '2-digit'
+                            });
+                            
                             return `<b>${d.name}</b><br/>` +
-                                   `时间: ${d.value[0]}<br/>` +
-                                   `通道: ${d.value[2] || 'N/A'}<br/>` +
-                                   `描述: ${d.value[3] || 'N/A'}<br/>` +
-                                   `状态: ${d.value[4] || 'N/A'}<br/>` +
-                                   `耗时: ${d.value[5] || 'N/A'}`;
+                                   `通道: ${channelName || 'N/A'}<br/>` +
+                                   `时间: ${time}<br/>` +
+                                   `操作: ${stepType || 'N/A'}<br/>` +
+                                   `修改前: ${oldValue !== null ? oldValue.toFixed(3) : 'N/A'}<br/>` +
+                                   `修改后: ${newValue !== null ? newValue.toFixed(3) : 'N/A'}<br/>` +
+                                   `变化量: ${formatDelta(delta)}<br/>` +
+                                   `变化率: ${formatPercent(changePercent)}`;
                         }
                     },
                     grid: {
                         left: '10%',
                         right: '10%',
-                        bottom: '15%'
+                        bottom: '15%',
+                        top: '15%'
                     },
                     xAxis: {
                         type: 'time',
@@ -485,36 +544,78 @@
                         data: ['操作事件'],
                         axisLabel: { show: false }
                     },
-                    dataZoom: [{
-                        type: 'slider',
-                        xAxisIndex: 0,
-                        start: 0,
-                        end: 100
-                    }],
-                    series: [{
-                        name: '操作日志',
-                        type: 'scatter',
-                        symbolSize: 20,
-                        data: timelineData,
-                        itemStyle: {
-                            color: function(params) {
-                                const status = params.data.value[4];
-                                if (status === 'success' || status === '成功') return '#52c41a';
-                                if (status === 'error' || status === '失败') return '#f5222d';
-                                return '#1890ff';
+                    dataZoom: [
+                        {
+                            type: 'inside',
+                            xAxisIndex: 0,
+                            start: 0,
+                            end: 100,
+                            zoomOnMouseWheel: true,
+                            moveOnMouseMove: true
+                        },
+                        {
+                            type: 'slider',
+                            xAxisIndex: 0,
+                            start: 0,
+                            end: 100,
+                            height: 20
+                        }
+                    ],
+                    series: [
+                        {
+                            name: '参数增加',
+                            type: 'scatter',
+                            data: timelineData.filter(d => d.value[6] > 0),
+                            itemStyle: { color: '#ff4d4f' },
+                            symbolSize: function(value) {
+                                return getSizeByDelta(value[6], maxAbsDelta);
+                            },
+                            label: {
+                                show: true,
+                                position: 'top',
+                                formatter: function(params) {
+                                    return params.data.name;
+                                },
+                                fontSize: 10
                             }
                         },
-                        label: {
-                            show: true,
-                            position: 'top',
-                            formatter: '{b}',
-                            fontSize: 10
+                        {
+                            name: '参数减少',
+                            type: 'scatter',
+                            data: timelineData.filter(d => d.value[6] < 0),
+                            itemStyle: { color: '#52c41a' },
+                            symbolSize: function(value) {
+                                return getSizeByDelta(value[6], maxAbsDelta);
+                            },
+                            label: {
+                                show: true,
+                                position: 'top',
+                                formatter: function(params) {
+                                    return params.data.name;
+                                },
+                                fontSize: 10
+                            }
+                        },
+                        {
+                            name: '无变化',
+                            type: 'scatter',
+                            data: timelineData.filter(d => !d.value[6] || d.value[6] === 0),
+                            itemStyle: { color: '#1890ff' },
+                            symbolSize: 10,
+                            label: {
+                                show: true,
+                                position: 'top',
+                                formatter: function(params) {
+                                    return params.data.name;
+                                },
+                                fontSize: 10
+                            }
                         }
-                    }]
+                    ]
                 };
                 
                 timelineChart.setOption(option);
-                log('✅ 操作日志时间线显示完成');
+                log('✅ 操作日志时间线显示完成 - 使用增强可视化');
             } catch (error) {
                 log(`⚠️ 加载时间线失败: ${error.message}`);
                 timelineChart.setOption({
