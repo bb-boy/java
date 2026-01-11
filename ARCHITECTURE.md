@@ -1,16 +1,48 @@
 # 波形数据展示系统 - 架构设计文档
 
+**最后更新**: 2026年1月11日  
+**系统版本**: 1.0.0
+
 ## 系统概述
 
-本系统用于展示和分析TDMS波形文件、操作日志和PLC互锁日志。采用**数据管道架构**：
+本系统是一套完整的波形数据采集、处理、存储和展示解决方案，用于展示和分析TDMS波形文件、操作日志和PLC互锁日志。采用**数据管道架构**和**多源数据融合**方案：
 
 ```
-数据源 (文件/网络) → Kafka → 数据库 → 前端展示
+数据源 (文件/网络) → Kafka → 数据库(MySQL/InfluxDB) → REST API / WebSocket → Web UI展示
 ```
+
+**核心特性**：
+- ✅ 双数据源支持 (本地文件/Kafka网络)，运行时动态切换
+- ✅ Kafka 数据管道 (异步解耦、削峰填谷)
+- ✅ MySQL + InfluxDB 混合存储 (结构化+时序数据)
+- ✅ 完整的REST API和WebSocket实时推送
+- ✅ 实时波形图表展示，含采样点数统计
+- ✅ 支持主备数据源自动合并（fallback机制）
 
 ## 核心架构
 
-### 数据流架构图
+### 分层架构设计
+
+系统采用**四层分层架构**：
+
+1. **数据采集层** (Ingest Layer)
+   - FileDataReader: 本地TDMS文件读取
+   - NetworkDataReceiver: 网络数据接收 (TCP/Kafka)
+
+2. **消息队列层** (Message Queue Layer)
+   - Kafka集群 (3节点高可用)
+   - 4个主题: shot-metadata, wave-data, operation-log, plc-interlock
+
+3. **数据持久化层** (Persistence Layer)
+   - MySQL: 元数据、操作日志、PLC互锁 (结构化数据)
+   - InfluxDB: 波形时序数据 (高效时序查询)
+
+4. **服务层 + 表现层** (Service & Presentation Layer)
+   - DataService: 数据源管理与切换
+   - DataQueryService: 数据库查询服务
+   - REST Controllers: 多个API端点
+   - WebSocket: 实时推送
+   - Web UI: ECharts图表展示 (含采样点数统计)
 
 ```
 ┌──────────────────────────────────────────────────────────────────────────────┐
