@@ -5,7 +5,7 @@ services:
     image: confluentinc/cp-kafka:8.1.1
     container_name: kafka1
     hostname: kafka1
-    
+    restart: unless-stopped
     ports:
       - "19092:9092"
     environment:
@@ -29,11 +29,20 @@ services:
       KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 0
     volumes:
       - ./data/kafka1:/var/lib/kafka/data
+    networks:
+      - kafka-network
+    healthcheck:
+      test: ["CMD-SHELL", "kafka-broker-api-versions --bootstrap-server localhost:9092 || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 60s
 
   kafka2:
     image: confluentinc/cp-kafka:8.1.1
     container_name: kafka2
     hostname: kafka2
+    restart: unless-stopped
     ports:
       - "29092:9092"
     environment:
@@ -57,11 +66,20 @@ services:
       KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 0
     volumes:
       - ./data/kafka2:/var/lib/kafka/data
+    networks:
+      - kafka-network
+    healthcheck:
+      test: ["CMD-SHELL", "kafka-broker-api-versions --bootstrap-server localhost:9092 || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 60s
 
   kafka3:
     image: confluentinc/cp-kafka:8.1.1
     container_name: kafka3
     hostname: kafka3
+    restart: unless-stopped
     ports:
       - "39092:9092"
     environment:
@@ -85,11 +103,20 @@ services:
       KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 0
     volumes:
       - ./data/kafka3:/var/lib/kafka/data
+    networks:
+      - kafka-network
+    healthcheck:
+      test: ["CMD-SHELL", "kafka-broker-api-versions --bootstrap-server localhost:9092 || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 60s
 
   # ✅ 可视化控制台：Kafka UI
   kafka-ui:
     image: provectuslabs/kafka-ui:latest
     container_name: kafka-ui
+    restart: unless-stopped
     depends_on:
       - kafka1
       - kafka2
@@ -102,11 +129,14 @@ services:
       # 注意：这里用容器内互联的 29092（不是宿主机的 19092/29092/39092）
       KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS: "kafka1:29092,kafka2:29092,kafka3:29092"
       DYNAMIC_CONFIG_ENABLED: "true"
+    networks:
+      - kafka-network
 
   # ✅ InfluxDB时序数据库
   influxdb:
     image: influxdb:2.7
     container_name: influxdb
+    restart: unless-stopped
     ports:
       - "8086:8086"
     environment:
@@ -118,11 +148,14 @@ services:
       DOCKER_INFLUXDB_INIT_ADMIN_TOKEN: my-super-secret-token
     volumes:
       - influxdb-data:/var/lib/influxdb2
+    networks:
+      - kafka-network
 
   # ✅ MySQL（开发环境）
   mysql:
     image: mysql:8.0
     container_name: mysql
+    restart: unless-stopped
     ports:
       - "3306:3306"
     environment:
@@ -132,11 +165,17 @@ services:
       MYSQL_PASSWORD: ${MYSQL_PASSWORD}
     volumes:
       - mysql-data:/var/lib/mysql
+    networks:
+      - kafka-network
     healthcheck:
       test: ["CMD", "mysqladmin", "ping", "-h", "127.0.0.1", "-p${MYSQL_ROOT_PASSWORD}"]
       interval: 10s
       timeout: 5s
       retries: 10
+
+networks:
+  kafka-network:
+    driver: bridge
 
 volumes:
   kafka1-data:
