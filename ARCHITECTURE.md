@@ -1,6 +1,6 @@
 # 波形数据展示系统 - 架构设计文档
 
-**最后更新**: 2026年3月2日  
+**最后更新**: 2026年3月3日  
 **系统版本**: 1.0.0
 
 ## 系统概述
@@ -8,11 +8,13 @@
 本系统是一套完整的波形数据采集、处理、存储和展示解决方案，用于展示和分析TDMS波形文件、操作日志和PLC互锁日志。采用**数据管道架构**和**多源数据融合**方案：
 
 ```
-数据源 (文件/网络) → Kafka → 数据库(MySQL/InfluxDB) → REST API / WebSocket → Web UI展示
+数据源 (文件/TCP) → Kafka → 数据库(MySQL/InfluxDB) → REST API / WebSocket → Web UI展示
 ```
 
+说明：直读模式已移除，查询仅通过数据库与时序库接口完成（`/api/hybrid/*`、`/api/database/*`），`/api/data/*` 返回 410。
+
 **核心特性**：
-- ✅ 双数据源支持 (本地文件/Kafka网络)，运行时动态切换
+- ✅ 文件/网络输入统一进入 Kafka（FileDataSource/TCP接收）
 - ✅ Kafka 数据管道 (异步解耦、削峰填谷)
 - ✅ MySQL + InfluxDB 混合存储 (结构化+时序数据)
 - ✅ 保护事件入库与查询、波形窗口与频谱分析
@@ -20,7 +22,7 @@
 - ✅ 基于真实波形的操作日志与保护事件生成器（生成后通过Kafka投递再入库）
 - ✅ 完整的REST API和WebSocket实时推送
 - ✅ 实时波形图表展示，含采样点数统计
-- ✅ 直读模式支持主备数据源合并（fallback机制）
+- ✅ 直读模式已移除，查询仅通过 MySQL/InfluxDB（/api/hybrid、/api/database）
 
 ## 核心架构
 
@@ -30,21 +32,20 @@
 
 1. **数据采集层** (Ingest Layer)
    - FileDataReader: 本地TDMS文件读取
-   - NetworkDataReceiver: 网络数据接收 (TCP/Kafka)
+   - NetworkDataReceiver: 网络数据接收 (TCP)
 
 2. **消息队列层** (Message Queue Layer)
    - Kafka集群 (3节点高可用)
-   - 4个主题: shot-metadata, wave-data, operation-log, plc-interlock
+   - 6个主题: shot-metadata, wave-data, operation-log, plc-interlock, protection-event, ingest-error
 
 3. **数据持久化层** (Persistence Layer)
-   - MySQL: 元数据、操作日志、PLC互锁 (结构化数据)
+   - MySQL: 元数据、波形分段、操作日志、PLC互锁、保护事件、采集失败事件 (结构化数据)
    - InfluxDB: 波形时序数据 (高效时序查询)
 
 4. **服务层 + 表现层** (Service & Presentation Layer)
-   - DataService: 数据源管理与切换
-   - DatabaseController: 数据库查询API
+   - DataPipelineService: 文件→Kafka→DB/Influx 同步管道
+   - KafkaController / DatabaseController / HybridDataController: 同步与查询API
    - WaveformWindowService / SpectrumService: 时间窗与频谱分析
-   - REST Controllers: 多个API端点
    - EcrhController: ECRH分析接口
    - WebSocket: 实时推送
    - Web UI: ECharts图表展示 (含采样点数统计)
@@ -74,6 +75,7 @@
 │  ┌─────────────┐ ┌─────────────┐ ┌─────────────┐ ┌─────────────┐            │
 │  │shot-metadata│ │  wave-data  │ │operation-log│ │plc-interlock│            │
 │  └─────────────┘ └─────────────┘ └─────────────┘ └─────────────┘            │
+│  (另含 protection-event, ingest-error)                                      │
 │└─────────────────────┼────────────────────────────────────────────────────────┘
 │                      │
 │                      ▼
@@ -96,6 +98,7 @@
 │  │ - operation_log │   │                 │                                  │
 │  │ - protection_events │                 │                                  │
 │  │ - plc_interlock │   │                 │                                  │
+│  │ - ingest_errors │   │                 │                                  │
 │  │ - users         │   │                 │                                  │
 │  │ - system_config │   │                 │                                  │
 │  └────────┬────────┘   └────────┬────────┘                                  │
@@ -113,7 +116,7 @@
 │           └──────────────────┬───────────────────────────┘                   │
 │                              ▼                                               │
 │                    ┌──────────────────────────────┐                          │
-│                    │DataController/HybridDataController│                     │
+│                    │KafkaController/HybridDataController│                    │
 │                    │          (REST API)          │                          │
 │                    └──────────────┬───────────────┘                          │
 │└─────────────────────────────┼────────────────────────────────────────────────┘
@@ -130,9 +133,9 @@
 │└─────────────────────────────────────────────────────────────────────────────┘
 ```
 
-- 数据源选择：`DataService` 基于 `app.data.source.primary` 选择 file 或 network 作为主源，`fallback=true` 时自动合并备用源结果（仅 `/api/data/*` 与 WebSocket）。  
+- 直读接口：`/api/data/*` 已移除并返回 410，仅保留兼容入口提示。  
 - 混合查询：`HybridDataController` 仅依赖 MySQL/InfluxDB，不回退到文件系统，数据缺失直接返回错误。  
-- 数据管道：`DataPipelineService` 负责文件 → Kafka → DataConsumer → MySQL/Influx 的同步，`KafkaController` 提供触发接口。  
+- 数据管道：`DataPipelineService` 负责文件/TCP → Kafka → DataConsumer → MySQL/Influx 的同步，`KafkaController` 提供触发接口；TDMS 派生的操作日志与保护事件同样先入 Kafka 再入库。  
 
 ## 项目结构
 
@@ -184,21 +187,21 @@ src/main/java/com/example/kafka/
 │   └── DataConsumer.java          # 消费并存入数据库
 │
 ├── datasource/                # 数据源实现
-│   ├── FileDataSource.java       # 本地文件源 (主/备之一)
-│   └── NetworkDataSource.java    # Kafka 网络源 (主/备之一)
+│   ├── FileDataSource.java       # 本地文件源（同步读取TDMS/日志）
+│   └── NetworkDataSource.java    # Kafka 网络源（接收Kafka数据）
 │
 ├── service/                    # 服务层
-│   ├── DataService.java           # 主/备数据源切换与合并
 │   ├── DataPipelineService.java   # 文件 → Kafka → DB/Influx 同步
 │   ├── InfluxDBService.java       # InfluxDB时序数据服务
 │   ├── WaveformWindowService.java # 波形窗口
 │   ├── SpectrumService.java       # 频谱计算
 │   ├── ProtectionEventService.java# 保护事件处理
 │   ├── WaveformSegmentService.java # 波形分段写入
-│   └── SyntheticDataGeneratorService.java # 日志/事件生成器
+│   ├── SyntheticDataGeneratorService.java # 日志/事件生成器
+│   └── TdmsEventGeneratorService.java # TDMS派生事件生成器
 │
 ├── controller/                 # 控制器层
-│   ├── DataController.java        # 直接文件/网络数据源的REST API
+│   ├── DataController.java        # 直读接口已移除（返回410）
 │   ├── KafkaController.java       # 数据管道同步与Kafka演示接口
 │   ├── DatabaseController.java    # MySQL中的数据查询
 │   ├── HybridDataController.java  # MySQL+Influx混合查询
@@ -401,23 +404,12 @@ src/main/java/com/example/kafka/
 | operation-log | 操作日志 | shotNo_timestamp |
 | plc-interlock | PLC互锁 | shotNo_timestamp |
 | protection-event | 保护事件 | shotNo_timestamp |
+| ingest-error | 采集/同步失败事件 | messageKey/shotNo |
 
 ## API接口
 
 ### 数据源直读 (`/api/data`)
-| 方法 | 路径 | 说明 |
-|------|------|------|
-| GET | /api/data/shots | 获取所有炮号（主/备数据源合并） |
-| GET | /api/data/shots/{shotNo}/metadata | 获取元数据 |
-| GET | /api/data/shots/{shotNo}/complete | 元数据+波形+日志 |
-| GET | /api/data/shots/{shotNo}/wave | 单通道波形（参数 channel/type） |
-| GET | /api/data/shots/{shotNo}/channels | 通道列表（参数 type=Tube/Water） |
-| GET | /api/data/channels?shotNo=1 | 同时获取Tube/Water通道 |
-| GET | /api/data/shots/{shotNo}/logs/operation | 操作日志 |
-| GET | /api/data/shots/{shotNo}/logs/plc | PLC互锁 |
-| GET | /api/data/status | 数据源状态（主数据源/备用/可用性等） |
-| POST | /api/data/source/switch?source=file\|network | 切换主数据源 |
-| POST | /api/data/shots/batch-metadata | 批量查询元数据 |
+直读模式已移除，所有 `/api/data/*` 请求返回 410，请改用 `/api/kafka/*` 同步后通过 `/api/hybrid/*` 或 `/api/database/*` 查询。
 
 ### 数据管道同步与健康检查 (`/api/kafka`)
 | 方法 | 路径 | 说明 |
@@ -503,9 +495,7 @@ app:
     tube.path: data/TUBE
     logs.path: data/TUBE_logs
     plc.path: data/PLC_logs
-    source:
-      primary: file               # 主数据源 file / network
-      fallback: true              # 启用备用数据源自动合并（仅直读模式）
+    channels.path: data/channels
   kafka:
     topic:
       metadata: shot-metadata
@@ -513,9 +503,10 @@ app:
       operation: operation-log
       plc: plc-interlock
       protection: protection-event
+      error: ingest-error
     group-id: data-consumer-group-v2
   network:
-    enabled: false                # TCP/Kafka 网络接收器开关
+    enabled: false                # TCP 网络接收器开关
     port: 9999
   protection:
     window:
@@ -542,7 +533,6 @@ server:
 - 文件数据源通道元数据路径：`app.data.channels.path`（默认 `data/channels`，`FileDataSource` 使用），需运行 `python extract_channels.py --all` 生成。  
 - H2 仅作为依赖存在，默认关闭控制台；如需改用 H2，可通过 profiles 覆盖 `spring.datasource`。  
 - InfluxDB 默认开启，如未部署可将 `app.influxdb.enabled=false`。  
-- 主/备数据源：`DataService` 根据 `app.data.source.primary` 选择 file 或 network，并在 `fallback=true` 时合并备用源（仅直读模式与WebSocket）。  
 
 ## 部署运行
 
