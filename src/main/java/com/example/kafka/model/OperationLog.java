@@ -10,6 +10,14 @@ public class OperationLog {
     private LocalDateTime timestamp;     // 操作时间
     private String operationType;        // 操作类型 (如: 调参)
     private String channelName;          // 通道名称 (如: 阴极电压, 阳极电压)
+    private Long userId;                 // 用户ID
+    private String deviceId;             // 设备ID
+    private String command;              // 操作命令
+    private String parameters;           // 参数(JSON)
+    private String resultCode;           // 结果代码
+    private String resultMessage;        // 结果描述
+    private String source;               // 来源标识
+    private String correlationId;        // 关联ID
     private String stepType;             // 步进类型
     private Double oldValue;             // 旧值
     private Double newValue;             // 新值
@@ -57,6 +65,70 @@ public class OperationLog {
 
     public void setChannelName(String channelName) {
         this.channelName = channelName;
+    }
+
+    public Long getUserId() {
+        return userId;
+    }
+
+    public void setUserId(Long userId) {
+        this.userId = userId;
+    }
+
+    public String getDeviceId() {
+        return deviceId;
+    }
+
+    public void setDeviceId(String deviceId) {
+        this.deviceId = deviceId;
+    }
+
+    public String getCommand() {
+        return command;
+    }
+
+    public void setCommand(String command) {
+        this.command = command;
+    }
+
+    public String getParameters() {
+        return parameters;
+    }
+
+    public void setParameters(String parameters) {
+        this.parameters = parameters;
+    }
+
+    public String getResultCode() {
+        return resultCode;
+    }
+
+    public void setResultCode(String resultCode) {
+        this.resultCode = resultCode;
+    }
+
+    public String getResultMessage() {
+        return resultMessage;
+    }
+
+    public void setResultMessage(String resultMessage) {
+        this.resultMessage = resultMessage;
+    }
+
+    public String getSource() {
+        return source;
+    }
+
+    public void setSource(String source) {
+        this.source = source;
+    }
+
+    public String getCorrelationId() {
+        return correlationId;
+    }
+
+    public void setCorrelationId(String correlationId) {
+        this.correlationId = correlationId;
     }
 
     public String getStepType() {

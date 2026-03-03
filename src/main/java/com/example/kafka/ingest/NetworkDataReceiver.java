@@ -18,7 +18,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 /**
- * 网络数据接收器 - 通过TCP/UDP接收外部数据并发送到Kafka
+ * 网络数据接收器 - 通过TCP接收外部数据并发送到Kafka
  */
 @Service
 public class NetworkDataReceiver {
@@ -185,29 +185,5 @@ public class NetworkDataReceiver {
         }
     }
     
-    /**
-     * 手动接收并发送数据 (用于API调用)
-     */
-    public void receiveMetadata(ShotMetadata metadata) {
-        dataProducer.sendMetadata(metadata);
-    }
     
-    public void receiveWaveData(WaveData waveData) {
-        waveData.setSourceType(WaveData.DataSourceType.NETWORK);
-        dataProducer.sendWaveData(waveData);
-    }
-    
-    public void receiveOperationLog(OperationLog log) {
-        log.setSourceType(WaveData.DataSourceType.NETWORK);
-        dataProducer.sendOperationLog(log);
-    }
-    
-    public void receivePlcInterlock(PlcInterlock interlock) {
-        interlock.setSourceType(WaveData.DataSourceType.NETWORK);
-        dataProducer.sendPlcInterlock(interlock);
-    }
-    
-    public boolean isRunning() {
-        return running;
-    }
 }

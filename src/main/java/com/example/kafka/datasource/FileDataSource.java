@@ -8,6 +8,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.JsonNode;
+import jakarta.annotation.PostConstruct;
 
 import java.io.*;
 import java.nio.file.*;
@@ -69,6 +70,11 @@ public class FileDataSource implements DataSource {
     // 日期时间格式化器，用于解析日志中的时间戳
     private static final DateTimeFormatter DATE_TIME_FORMATTER = 
         DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss.SSS");
+
+    @PostConstruct
+    public void init() {
+        initialize();
+    }
     
     @Override
     public WaveData.DataSourceType getSourceType() {

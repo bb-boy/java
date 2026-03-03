@@ -9,7 +9,9 @@ import java.time.LocalDateTime;
 @Entity
 @Table(name = "operation_log", indexes = {
     @Index(name = "idx_oplog_shot", columnList = "shot_no"),
-    @Index(name = "idx_oplog_time", columnList = "timestamp")
+    @Index(name = "idx_oplog_time", columnList = "timestamp"),
+    @Index(name = "idx_oplog_user_time", columnList = "user_id, timestamp"),
+    @Index(name = "idx_oplog_device_time", columnList = "device_id, timestamp")
 })
 public class OperationLogEntity {
     
@@ -22,10 +24,35 @@ public class OperationLogEntity {
     
     @Column(name = "timestamp")
     private LocalDateTime timestamp;
-    
+
     @Column(name = "operation_type")
     private String operationType;
-    
+
+    @Column(name = "user_id")
+    private Long userId;
+
+    @Column(name = "device_id")
+    private String deviceId;
+
+    @Column(name = "command")
+    private String command;
+
+    @Lob
+    @Column(name = "parameters", columnDefinition = "TEXT")
+    private String parameters;
+
+    @Column(name = "result_code")
+    private String resultCode;
+
+    @Column(name = "result_message")
+    private String resultMessage;
+
+    @Column(name = "source")
+    private String source;
+
+    @Column(name = "correlation_id")
+    private String correlationId;
+
     @Column(name = "channel_name")
     private String channelName;
     
@@ -79,7 +106,31 @@ public class OperationLogEntity {
     
     public String getOperationType() { return operationType; }
     public void setOperationType(String operationType) { this.operationType = operationType; }
-    
+
+    public Long getUserId() { return userId; }
+    public void setUserId(Long userId) { this.userId = userId; }
+
+    public String getDeviceId() { return deviceId; }
+    public void setDeviceId(String deviceId) { this.deviceId = deviceId; }
+
+    public String getCommand() { return command; }
+    public void setCommand(String command) { this.command = command; }
+
+    public String getParameters() { return parameters; }
+    public void setParameters(String parameters) { this.parameters = parameters; }
+
+    public String getResultCode() { return resultCode; }
+    public void setResultCode(String resultCode) { this.resultCode = resultCode; }
+
+    public String getResultMessage() { return resultMessage; }
+    public void setResultMessage(String resultMessage) { this.resultMessage = resultMessage; }
+
+    public String getSource() { return source; }
+    public void setSource(String source) { this.source = source; }
+
+    public String getCorrelationId() { return correlationId; }
+    public void setCorrelationId(String correlationId) { this.correlationId = correlationId; }
+
     public String getChannelName() { return channelName; }
     public void setChannelName(String channelName) { this.channelName = channelName; }
     

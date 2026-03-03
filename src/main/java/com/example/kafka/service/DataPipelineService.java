@@ -22,7 +22,7 @@ import java.util.concurrent.atomic.AtomicInteger;
  * 1. 从FileDataSource读取TDMS文件和日志
  * 2. 通过DataProducer发送到Kafka主题
  * 3. DataConsumer自动监听Kafka并存入数据库
- * 4. 前端可以通过DataQueryService从数据库查询
+ * 4. 前端通过 /api/hybrid 或 /api/database 从数据库查询
  * 
  * 【使用场景】
  * - 定时任务：每隔一段时间自动同步新数据
@@ -33,12 +33,17 @@ import java.util.concurrent.atomic.AtomicInteger;
 public class DataPipelineService {
     
     private static final Logger logger = LoggerFactory.getLogger(DataPipelineService.class);
+    private static final String STAGE_READ_METADATA = "READ_METADATA";
+    private static final String STAGE_PIPELINE_EXCEPTION = "PIPELINE_EXCEPTION";
     
     @Autowired
     private FileDataSource fileDataSource;  // 文件数据源
     
     @Autowired
     private DataProducer dataProducer;      // Kafka生产者
+
+    @Autowired
+    private TdmsEventGeneratorService tdmsEventGeneratorService;
     
     /**
      * 同步单个炮号的所有数据到Kafka（会自动触发DataConsumer存入数据库）
@@ -50,7 +55,7 @@ public class DataPipelineService {
      * 4. Kafka收到消息，分发到各分区（多副本容错）
      * 5. DataConsumer.java 中的 @KafkaListener 监听到消息
      * 6. DataConsumer 将消息反序列化，调用 metadataRepository.save() 存入H2数据库
-     * 7. 前端调用 /api/data/shots API时，可选择从数据库读取
+     * 7. 前端调用 /api/hybrid/shots 查询数据库
      * 
      * @param shotNo 炮号
      * @return 同步结果统计
@@ -73,6 +78,7 @@ public class DataPipelineService {
                 logger.warn("炮号 {} 的元数据不存在，跳过", shotNo);
                 result.setSuccess(false);
                 result.setErrorMessage("元数据不存在");
+                dataProducer.sendSyncFailure(shotNo, STAGE_READ_METADATA, "元数据不存在", null);
                 return result;
             }
             
@@ -102,9 +108,12 @@ public class DataPipelineService {
             logger.info("【步骤3/4】读取并发送Tube波形数据...");
             List<String> tubeChannels = fileDataSource.getChannelNames(shotNo, "Tube");
             logger.info("  发现 {} 个Tube通道: {}", tubeChannels.size(), tubeChannels);
+
+            WaveData primaryWaveData = null;
             
             for (String channel : tubeChannels) {
                 WaveData waveData = fileDataSource.getWaveData(shotNo, channel, "Tube");
+                applyMetadataToWaveData(metadata, waveData);
                 
                 if (waveData != null && waveData.getData() != null && !waveData.getData().isEmpty()) {
                     dataProducer.sendWaveData(waveData)
@@ -118,6 +127,9 @@ public class DataPipelineService {
                             return null;
                         })
                         .join();
+                    if (primaryWaveData == null) {
+                        primaryWaveData = waveData;
+                    }
                 } else {
                     logger.debug("    - 通道 {} 无数据，跳过", channel);
                 }
@@ -132,6 +144,7 @@ public class DataPipelineService {
             
             for (String channel : waterChannels) {
                 WaveData waveData = fileDataSource.getWaveData(shotNo, channel, "Water");
+                applyMetadataToWaveData(metadata, waveData);
                 
                 if (waveData != null && waveData.getData() != null && !waveData.getData().isEmpty()) {
                     dataProducer.sendWaveData(waveData)
@@ -145,22 +158,27 @@ public class DataPipelineService {
                             return null;
                         })
                         .join();
+                    if (primaryWaveData == null) {
+                        primaryWaveData = waveData;
+                    }
                 } else {
                     logger.debug("    - 通道 {} 无数据，跳过", channel);
                 }
             }
             
             // ==================================================
-            // 步骤5: 发送操作日志（如果存在）
+            // 步骤5: 从TDMS波形生成操作日志与保护事件
             // ==================================================
-            List<OperationLog> opLogs = fileDataSource.getOperationLogs(shotNo);
-            if (opLogs != null && !opLogs.isEmpty()) {
-                logger.info("【额外】发送操作日志: {} 条", opLogs.size());
-                for (OperationLog log : opLogs) {
-                    dataProducer.sendOperationLog(log)
-                        .thenRun(() -> result.incrementOperationLog())
-                        .join();
-                }
+            if (primaryWaveData != null && primaryWaveData.getData() != null
+                && !primaryWaveData.getData().isEmpty()) {
+                TdmsEventGeneratorService.GenerationResult generated =
+                    tdmsEventGeneratorService.generateFromWaveData(metadata, primaryWaveData, true);
+                result.addOperationLog(generated.operationCount());
+                result.addProtectionEvent(generated.protectionCount());
+                logger.info("【TDMS派生】操作日志 {} 条, 保护事件 {} 条", 
+                    generated.operationCount(), generated.protectionCount());
+            } else {
+                logger.warn("【TDMS派生】未找到可用波形，跳过操作日志/保护事件生成: shotNo={}", shotNo);
             }
             
             // ==================================================
@@ -182,6 +200,7 @@ public class DataPipelineService {
             logger.info("  - 元数据: {} 条", result.getMetadataCount());
             logger.info("  - 波形数据: {} 条", result.getWaveDataCount());
             logger.info("  - 操作日志: {} 条", result.getOperationLogCount());
+            logger.info("  - 保护事件: {} 条", result.getProtectionEventCount());
             logger.info("  - PLC互锁: {} 条", result.getPlcInterlockCount());
             logger.info("========================================");
             
@@ -189,9 +208,25 @@ public class DataPipelineService {
             logger.error("同步炮号 {} 时发生异常: {}", shotNo, e.getMessage(), e);
             result.setSuccess(false);
             result.setErrorMessage(e.getMessage());
+            dataProducer.sendSyncFailure(shotNo, STAGE_PIPELINE_EXCEPTION, e.getMessage(), e);
         }
         
         return result;
+    }
+
+    private void applyMetadataToWaveData(ShotMetadata metadata, WaveData waveData) {
+        if (metadata == null || waveData == null) {
+            return;
+        }
+        if (waveData.getSampleRate() == null || waveData.getSampleRate() <= 0) {
+            waveData.setSampleRate(metadata.getSampleRate());
+        }
+        if (waveData.getStartTime() == null && metadata.getStartTime() != null) {
+            waveData.setStartTime(metadata.getStartTime());
+        }
+        if (waveData.getEndTime() == null && metadata.getEndTime() != null) {
+            waveData.setEndTime(metadata.getEndTime());
+        }
     }
     
     /**
@@ -302,6 +337,7 @@ public class DataPipelineService {
         private AtomicInteger metadataCount = new AtomicInteger(0);
         private AtomicInteger waveDataCount = new AtomicInteger(0);
         private AtomicInteger operationLogCount = new AtomicInteger(0);
+        private AtomicInteger protectionEventCount = new AtomicInteger(0);
         private AtomicInteger plcInterlockCount = new AtomicInteger(0);
         
         public SyncResult(Integer shotNo) {
@@ -311,6 +347,8 @@ public class DataPipelineService {
         public void incrementMetadata() { metadataCount.incrementAndGet(); }
         public void incrementWaveData() { waveDataCount.incrementAndGet(); }
         public void incrementOperationLog() { operationLogCount.incrementAndGet(); }
+        public void addOperationLog(int count) { operationLogCount.addAndGet(Math.max(0, count)); }
+        public void addProtectionEvent(int count) { protectionEventCount.addAndGet(Math.max(0, count)); }
         public void incrementPlcInterlock() { plcInterlockCount.incrementAndGet(); }
         
         // Getters and setters
@@ -322,6 +360,7 @@ public class DataPipelineService {
         public int getMetadataCount() { return metadataCount.get(); }
         public int getWaveDataCount() { return waveDataCount.get(); }
         public int getOperationLogCount() { return operationLogCount.get(); }
+        public int getProtectionEventCount() { return protectionEventCount.get(); }
         public int getPlcInterlockCount() { return plcInterlockCount.get(); }
     }
     

@@ -245,11 +245,6 @@ app:
     channels:
       path: data/channels  # merged from config/application.yml
     
-    # 主数据源: file(文件) 或 network(网络/Kafka)
-    source:
-      primary: file
-      fallback: true  # 是否启用备用数据源
-  
   # Kafka主题配置
   kafka:
     topic:
@@ -257,6 +252,8 @@ app:
       wavedata: wave-data          # 波形数据主题
       operation: operation-log     # 操作日志主题
       plc: plc-interlock          # PLC互锁主题
+      protection: protection-event # 保护事件主题
+      error: ingest-error          # 采集/同步失败事件主题
     
     group-id: data-consumer-group-v2   # 消费者组ID
   
@@ -264,6 +261,33 @@ app:
   network:
     enabled: false      # 是否启用TCP服务器接收数据
     port: 9999         # TCP服务器端口
+
+  # 保护事件窗口配置（毫秒）
+  protection:
+    window:
+      before-ms: 100
+      after-ms: 200
+
+  # 波形窗口配置
+  waveform:
+    window:
+      max-points: 50000
+
+  # 频谱计算配置
+  spectrum:
+    max-points: 65536
+
+  # TDMS派生日志/保护事件生成配置
+  tdms:
+    generator:
+      operation:
+        max-count: 12        # 每个炮号最多生成的操作日志条数
+        sigma: 6.0           # 阈值倍数(基于MAD)用于阶跃检测
+        merge-gap: 5         # 合并相邻变化点的最小间隔
+        min-delta-abs: 0.0   # 最小绝对变化量
+      protection:
+        limit: 2             # 保护事件数量
+        ratio: 0.9           # 阈值比例(峰值*ratio)
   
   # InfluxDB时序数据库配置
   influxdb:

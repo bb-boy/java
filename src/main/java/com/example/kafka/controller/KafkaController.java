@@ -246,6 +246,7 @@ public class KafkaController {
                     "metadata", result.getMetadataCount(),
                     "waveData", result.getWaveDataCount(),
                     "operationLog", result.getOperationLogCount(),
+                    "protectionEvent", result.getProtectionEventCount(),
                     "plcInterlock", result.getPlcInterlockCount()
                 ));
             } else {
@@ -340,4 +341,3 @@ public class KafkaController {
         return ResponseEntity.ok(response);
     }
 }
-
