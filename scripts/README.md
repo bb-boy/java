@@ -34,7 +34,7 @@
 ./scripts/projectctl.sh stop
 
 # 重启
-./scripts/projectctl.sh restart
+
 
 # 查看状态
 ./scripts/projectctl.sh status

@@ -3,8 +3,11 @@ package com.example.kafka.controller;
 // 导入消息生产者服务
 import com.example.kafka.service.MessageProducer;
 import com.example.kafka.service.DataPipelineService;
+import com.example.kafka.model.ShotMetadata;
+import com.example.kafka.producer.DataProducer;
 // 导入Spring的HTTP响应类
 import org.springframework.http.ResponseEntity;
+import org.springframework.http.HttpStatus;
 // 导入Spring Web的相关注解
 import org.springframework.web.bind.annotation.*;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -42,6 +45,9 @@ public class KafkaController {
     // 注入数据管道服务（新增）
     @Autowired
     private DataPipelineService dataPipelineService;
+
+    @Autowired
+    private DataProducer dataProducer;
     
     /**
      * 构造函数：Spring自动注入MessageProducer
@@ -205,6 +211,35 @@ public class KafkaController {
         //   "service": "Kafka Demo"
         // }
         return ResponseEntity.ok(response);
+    }
+
+    /**
+     * 元数据注入接口 - 上游直接提交ShotMetadata并发送到Kafka
+     *
+     * POST /api/kafka/metadata
+     */
+    @PostMapping("/metadata")
+    public ResponseEntity<Map<String, Object>> ingestMetadata(
+            @RequestBody ShotMetadata metadata) {
+        Map<String, Object> response = new HashMap<>();
+
+        if (metadata == null || metadata.getShotNo() == null) {
+            response.put("status", "failed");
+            response.put("message", "shotNo 不能为空");
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
+        }
+
+        try {
+            dataProducer.sendMetadata(metadata).join();
+            response.put("status", "success");
+            response.put("message", "元数据已发送到Kafka");
+            response.put("data", Map.of("shotNo", metadata.getShotNo()));
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            response.put("status", "error");
+            response.put("message", "元数据发送失败: " + e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
+        }
     }
     
     // ========================================================================
