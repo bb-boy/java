@@ -4,14 +4,11 @@ import com.example.kafka.entity.OperationLogEntity;
 import com.example.kafka.entity.ProtectionEventEntity;
 import com.example.kafka.model.SpectrumRequest;
 import com.example.kafka.model.SpectrumResult;
-import com.example.kafka.model.SyntheticGenerationRequest;
-import com.example.kafka.model.SyntheticGenerationResult;
 import com.example.kafka.model.WaveformWindowRequest;
 import com.example.kafka.model.WaveformWindowResult;
 import com.example.kafka.repository.OperationLogRepository;
 import com.example.kafka.repository.ProtectionEventRepository;
 import com.example.kafka.service.SpectrumService;
-import com.example.kafka.service.SyntheticDataGeneratorService;
 import com.example.kafka.service.WaveformWindowService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -39,21 +36,17 @@ public class EcrhController {
     private final OperationLogRepository operationLogRepository;
     private final WaveformWindowService waveformWindowService;
     private final SpectrumService spectrumService;
-    private final SyntheticDataGeneratorService syntheticDataGeneratorService;
-
     @Autowired
     public EcrhController(
         ProtectionEventRepository protectionEventRepository,
         OperationLogRepository operationLogRepository,
         WaveformWindowService waveformWindowService,
-        SpectrumService spectrumService,
-        SyntheticDataGeneratorService syntheticDataGeneratorService
+        SpectrumService spectrumService
     ) {
         this.protectionEventRepository = protectionEventRepository;
         this.operationLogRepository = operationLogRepository;
         this.waveformWindowService = waveformWindowService;
         this.spectrumService = spectrumService;
-        this.syntheticDataGeneratorService = syntheticDataGeneratorService;
     }
 
     @GetMapping("/protection-events")
@@ -160,16 +153,6 @@ public class EcrhController {
             List<OperationLogEntity> filtered = filterOperationLogs(logs, userId, deviceId, command);
             return ResponseEntity.ok(filtered);
         } catch (IllegalArgumentException ex) {
-            return badRequest(ex.getMessage());
-        }
-    }
-
-    @PostMapping("/generate")
-    public ResponseEntity<?> generateSyntheticData(@RequestBody SyntheticGenerationRequest request) {
-        try {
-            SyntheticGenerationResult result = syntheticDataGeneratorService.generateProtectionOperation(request);
-            return ResponseEntity.ok(result);
-        } catch (IllegalArgumentException | IllegalStateException ex) {
             return badRequest(ex.getMessage());
         }
     }

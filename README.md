@@ -33,7 +33,6 @@
 - ✅ **完整的辅助工具链**：通道提取、波形读取、Kafka数据发布、文件监控
 - ✅ **波形窗口与频谱**：按时间窗抽取波形并计算FFT频谱
 - ✅ **分段波形存储**：元数据+分段样本入库，支持窗口回放
-- ✅ **ECRH生成器**：基于波形生成操作日志/保护事件，保证可重复
 - ✅ **TDMS派生器**：同步时自动从TDMS生成操作日志/保护事件
 - ✅ **InfluxDB维护接口**：重复数据清理与完整性报告
 
@@ -61,7 +60,6 @@
 - `GET /api/ecrh/waveform/spectrum`：FFT频谱（同上，支持 `maxPoints`）
 - `GET /api/ecrh/protection-events`：保护事件（支持 `severity/deviceId/interlockName` 与时间范围）
 - `GET /api/ecrh/operation-logs`：操作日志（支持 `userId/deviceId/command` 与时间范围）
-- `POST /api/ecrh/generate`：生成操作日志与保护事件（`SyntheticGenerationRequest`）
 
 **注意**：
 - 查询前需先通过 `/api/kafka/sync/*` 同步，数据仅通过 Kafka→数据库链路提供
@@ -103,7 +101,6 @@
 │   │   ├── WaveformWindowService.java       # 波形窗口计算
 │   │   ├── SpectrumService.java             # 频谱计算
 │   │   ├── WaveformSegmentService.java      # 波形分段写入
-│   │   └── SyntheticDataGeneratorService.java # 日志/事件生成器
 │   │
 │   ├── datasource/                          # 数据源实现 (策略模式)
 │   │   ├── DataSource.java                  # 接口定义
@@ -141,8 +138,6 @@
 │   │   ├── SpectrumRequest.java             # 频谱请求
 │   │   ├── SpectrumResult.java              # 频谱结果
 │   │   ├── WaveformSegmentRequest.java      # 波形分段请求
-│   │   ├── SyntheticGenerationRequest.java  # 生成请求
-│   │   └── SyntheticGenerationResult.java   # 生成结果
 │   │
 │   └── repository/                          # 数据访问层 (Spring Data JPA)
 │       ├── ShotMetadataRepository.java
@@ -284,6 +279,7 @@ nohup java -jar target/kafka-demo-1.0.0.jar > logs/app.log 2>&1 &
 | GET | `/api/kafka/send?message=Hello` | 发送单条消息（测试） |
 | GET | `/api/kafka/send-with-key?key=k1&message=Hello` | 发送带Key消息（测试） |
 | GET | `/api/kafka/batch?count=10` | 批量发送消息（测试） |
+| POST | `/api/kafka/metadata` | 注入元数据（JSON体，需shotNo） |
 | GET | `/api/kafka/sync/shot?shotNo=1` | 同步单个炮号 |
 | GET | `/api/kafka/sync/batch?shotNos=1,2,3` | 批量同步 |
 | POST | `/api/kafka/sync/all` | 全量同步所有炮号 |
@@ -331,7 +327,6 @@ MySQL + InfluxDB组合查询，高性能波形展示
 | GET | `/api/ecrh/operation-logs?shotNo=1&start=...&end=...&command=SET_POWER` | 操作日志检索 |
 | GET | `/api/ecrh/waveform/window?shotNo=1&channelName=InPower&dataType=Tube&start=...&end=...` | 波形窗口（MySQL压缩数据） |
 | GET | `/api/ecrh/waveform/spectrum?shotNo=1&channelName=InPower&dataType=Tube&start=...&end=...` | 频谱计算（FFT） |
-| POST | `/api/ecrh/generate` | 生成操作日志与保护事件 |
 
 ### 🔌 WebSocket实时推送
 - STOMP端点：`ws://localhost:8080/ws`
@@ -363,7 +358,8 @@ curl 'http://localhost:8080/api/hybrid/timeline/1'
 | 脚本 | 位置 | 用途 | 说明 |
 |------|------|------|------|
 | `extract_channels.py` | data/ | 通道元数据提取 | 扫描TDMS生成 `channels/channels_*.json` |
-| `watch_tdms.py` | data/ | TDMS文件监控 | 监控TDMS文件变化，自动触发处理 |
+| `generate_metadata_log.py` | data/ | 元数据日志生成 | 从TDMS生成 `shotNo_Tube_operation_log.txt` |
+| `watch_tdms.py` | data/ | TDMS文件监控 | 监控TDMS文件变化，自动生成元数据日志并触发同步 |
 | `read_wave_data.py` | 根目录 | 波形读取 | 被FileDataSource调用，解析TDMS波形 |
 | `data_publisher.py` | 根目录 | 数据发布 | 将文件数据发送到Kafka，测试网络源 |
 | `projectctl.sh` | scripts/ | 项目管理 | 启动/停止/重启/状态检查 |
@@ -377,11 +373,6 @@ curl 'http://localhost:8080/api/hybrid/timeline/1'
 1. `protection-event` 主题写入保护事件消息
 2. `DataConsumer` 写入 `protection_events` 表
 3. `/api/ecrh/protection-events` 提供查询接口
-
-**ECRH生成器流程**：
-1. 调用 `/api/ecrh/generate` 触发生成
-2. 从 `wave_data` 读取波形并写入 `operation_log`/`protection_events`
-3. 前端通过 `/api/ecrh/*` 联动展示波形与事件
 
 ## ⚙️ 主要配置说明
 

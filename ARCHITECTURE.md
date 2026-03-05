@@ -173,8 +173,6 @@ src/main/java/com/example/kafka/
 │   ├── SpectrumRequest.java
 │   ├── SpectrumResult.java
 │   ├── WaveformSegmentRequest.java
-│   ├── SyntheticGenerationRequest.java
-│   └── SyntheticGenerationResult.java
 │
 ├── ingest/                     # 数据采集层
 │   ├── FileDataReader.java        # 文件读取器
@@ -197,7 +195,6 @@ src/main/java/com/example/kafka/
 │   ├── SpectrumService.java       # 频谱计算
 │   ├── ProtectionEventService.java# 保护事件处理
 │   ├── WaveformSegmentService.java # 波形分段写入
-│   ├── SyntheticDataGeneratorService.java # 日志/事件生成器
 │   └── TdmsEventGeneratorService.java # TDMS派生事件生成器
 │
 ├── controller/                 # 控制器层
@@ -418,6 +415,7 @@ src/main/java/com/example/kafka/
 | GET | /api/kafka/send | 发送单条消息（测试） |
 | GET | /api/kafka/send-with-key | 发送带Key消息（测试） |
 | GET | /api/kafka/batch | 批量发送消息（测试） |
+| POST | /api/kafka/metadata | 注入元数据（JSON体，需shotNo） |
 | GET | /api/kafka/sync/shot?shotNo=1 | 将单炮号文件同步到 Kafka→DB/Influx |
 | GET | /api/kafka/sync/batch?shotNos=1,2 | 批量同步指定炮号 |
 | POST | /api/kafka/sync/all | 全量同步所有炮号（耗时） |
@@ -459,7 +457,6 @@ src/main/java/com/example/kafka/
 | GET | /api/ecrh/operation-logs | 操作日志检索（支持 userId/deviceId/command 与时间范围） |
 | GET | /api/ecrh/waveform/window | 波形窗口（MySQL压缩数据，start/end 可选成对） |
 | GET | /api/ecrh/waveform/spectrum | 频谱计算（FFT） |
-| POST | /api/ecrh/generate | 基于波形生成操作日志与保护事件 |
 
 ### WebSocket端点
 | 端点 | 说明 |
