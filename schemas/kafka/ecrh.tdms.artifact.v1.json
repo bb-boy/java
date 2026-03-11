@@ -1,0 +1,25 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "TDMS Artifact",
+  "type": "object",
+  "required": [
+    "artifact_id",
+    "shot_no",
+    "data_type",
+    "file_path",
+    "sha256_hex",
+    "artifact_status"
+  ],
+  "properties": {
+    "artifact_id": {"type": "string"},
+    "shot_no": {"type": "integer"},
+    "data_type": {"type": "string"},
+    "file_path": {"type": "string"},
+    "file_name": {"type": "string"},
+    "file_size_bytes": {"type": "integer"},
+    "file_mtime": {"type": "string", "format": "date-time"},
+    "sha256_hex": {"type": "string"},
+    "artifact_status": {"type": "string"}
+  },
+  "additionalProperties": false
+}

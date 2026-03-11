@@ -1,0 +1,16 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Operation Task Dict",
+  "type": "object",
+  "required": ["operation_task_code", "is_active"],
+  "properties": {
+    "operation_task_code": {"type": "string"},
+    "iter_name": {"type": "string"},
+    "display_name_zh": {"type": "string"},
+    "task_group": {"type": "string"},
+    "equipment_scope": {"type": "string"},
+    "allowed_mode_hint": {"type": "string"},
+    "is_active": {"type": "boolean"}
+  },
+  "additionalProperties": false
+}

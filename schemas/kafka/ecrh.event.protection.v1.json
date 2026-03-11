@@ -1,0 +1,48 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Protection Event",
+  "type": "object",
+  "required": [
+    "source_system",
+    "shot_no",
+    "event_family",
+    "event_time",
+    "event_code"
+  ],
+  "properties": {
+    "source_system": {"type": "string"},
+    "authority_level": {"type": "string"},
+    "correlation_key": {"type": "string"},
+    "source_entity_id": {"type": "string"},
+    "shot_no": {"type": "integer"},
+    "artifact_id": {"type": "string"},
+    "event_family": {"type": "string", "enum": ["PROTECTION"]},
+    "event_code": {"type": "string"},
+    "event_name": {"type": "string"},
+    "event_time": {"type": "string", "format": "date-time"},
+    "process_id": {"type": "string"},
+    "channel_name": {"type": "string"},
+    "message_text": {"type": "string"},
+    "message_level": {"type": "string"},
+    "severity": {"type": "string"},
+    "dedup_key": {"type": "string"},
+    "details": {
+      "type": "object",
+      "properties": {
+        "protection_type_code": {"type": "string"},
+        "protection_scope": {"type": "string"},
+        "trigger_condition": {"type": "string"},
+        "measured_value": {"type": "number"},
+        "threshold_value": {"type": "number"},
+        "threshold_op": {"type": "string"},
+        "action_taken": {"type": "string"},
+        "window_start": {"type": "string", "format": "date-time"},
+        "window_end": {"type": "string", "format": "date-time"},
+        "related_channels": {"type": "array", "items": {"type": "string"}},
+        "evidence_score": {"type": "number"}
+      },
+      "additionalProperties": true
+    }
+  },
+  "additionalProperties": false
+}

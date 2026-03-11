@@ -1,0 +1,59 @@
+{
+  "shot_no": 176,
+  "source_system": "TDMS_DERIVED",
+  "authority_level": "PROVISIONAL",
+  "primary_artifact_ids": [
+    "tdms:176:tube:5532353b5d06"
+  ],
+  "auxiliary_artifact_ids": [
+    "tdms:176:water:82ce926b71ff"
+  ],
+  "artifacts": [
+    {
+      "shot_no": 176,
+      "data_type": "TUBE",
+      "artifact_id": "tdms:176:tube:5532353b5d06",
+      "file_path": "/home/pl/java/data/TUBE/176/176_Tube.tdms",
+      "file_name": "176_Tube.tdms",
+      "sha256_hex": "5532353b5d062cc5545034c7612905032befe19747dee342d43e04df42b2905f",
+      "file_size": 131701,
+      "file_mtime": "2026-01-09T08:44:14Z",
+      "stable_checks": 2,
+      "group_name": "170TubeDAQ1",
+      "properties": {
+        "name": "176_Tube",
+        "ShotNo": 176,
+        "IpLen": 50,
+        "ExtraAcqTime": 0
+      },
+      "channel_count": 10,
+      "source_role": "PRIMARY",
+      "source_system": "TDMS_DERIVED",
+      "authority_level": "PROVISIONAL",
+      "artifact_status": "PARSED"
+    },
+    {
+      "shot_no": 176,
+      "data_type": "WATER",
+      "artifact_id": "tdms:176:water:82ce926b71ff",
+      "file_path": "/home/pl/java/data/TUBE/176/176_Water.tdms",
+      "file_name": "176_Water.tdms",
+      "sha256_hex": "82ce926b71ff82383f58c951b8918c7b867bb8746419b68521348b0d25785ead",
+      "file_size": 25686,
+      "file_mtime": "2026-01-09T08:44:14Z",
+      "stable_checks": 2,
+      "group_name": "170WaterDAQ1",
+      "properties": {
+        "name": "176_Water",
+        "ShotNo": 176,
+        "IpLen": 50,
+        "ExtraAcqTime": 0
+      },
+      "channel_count": 11,
+      "source_role": "AUXILIARY",
+      "source_system": "TDMS_DERIVED",
+      "authority_level": "PROVISIONAL",
+      "artifact_status": "PARSED"
+    }
+  ]
+}

@@ -1,0 +1,41 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Waveform Channel Batch",
+  "type": "object",
+  "required": [
+    "artifact_id",
+    "shot_no",
+    "source_system",
+    "channel_name",
+    "process_id",
+    "sample_rate_hz",
+    "chunk_index",
+    "chunk_count",
+    "chunk_start_index",
+    "window_start",
+    "encoding",
+    "samples"
+  ],
+  "properties": {
+    "artifact_id": {"type": "string"},
+    "shot_no": {"type": "integer"},
+    "data_type": {"type": "string"},
+    "source_system": {"type": "string"},
+    "channel_name": {"type": "string"},
+    "process_id": {"type": "string"},
+    "sample_rate_hz": {"type": "number"},
+    "chunk_index": {"type": "integer"},
+    "chunk_count": {"type": "integer"},
+    "chunk_start_index": {"type": "integer"},
+    "window_start": {"type": "string", "format": "date-time"},
+    "window_end": {"type": "string", "format": "date-time"},
+    "encoding": {"type": "string"},
+    "samples": {
+      "oneOf": [
+        {"type": "array", "items": {"type": "number"}},
+        {"type": "string"}
+      ]
+    }
+  },
+  "additionalProperties": false
+}

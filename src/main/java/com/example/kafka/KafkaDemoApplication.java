@@ -5,7 +5,6 @@ import org.springframework.boot.SpringApplication;
 // 导入Spring Boot自动配置注解
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 // 导入定时任务注解
-import org.springframework.scheduling.annotation.EnableScheduling;
 
 /**
  * Spring Boot Kafka Demo 主应用类
@@ -19,7 +18,6 @@ import org.springframework.scheduling.annotation.EnableScheduling;
                         // @Configuration: 标识这是一个配置类
                         // @EnableAutoConfiguration: 启用Spring Boot的自动配置机制
                         // @ComponentScan: 自动扫描当前包及子包下的所有Spring组件
-@EnableScheduling       // 启用定时任务支持（新增）
 public class KafkaDemoApplication {
     
     /**
@@ -39,7 +37,7 @@ public class KafkaDemoApplication {
         // 应用启动成功后，打印提示信息到控制台
         System.out.println("========================================");
         System.out.println("Kafka Demo 应用已启动！");
-        System.out.println("访问: http://localhost:8080/api/kafka/send?message=Hello");
+        System.out.println("访问: http://localhost:8080/api/ingest/shot?shotNo=1");
         System.out.println("========================================");
     }
 }

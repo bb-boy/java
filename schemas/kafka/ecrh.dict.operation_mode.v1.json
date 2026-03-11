@@ -1,0 +1,13 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Operation Mode Dict",
+  "type": "object",
+  "required": ["operation_mode_code", "is_active"],
+  "properties": {
+    "operation_mode_code": {"type": "string"},
+    "display_name_zh": {"type": "string"},
+    "scope_note": {"type": "string"},
+    "is_active": {"type": "boolean"}
+  },
+  "additionalProperties": false
+}

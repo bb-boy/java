@@ -1,0 +1,21 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Signal Catalog",
+  "type": "object",
+  "required": ["source_system", "source_name", "data_type", "process_id"],
+  "properties": {
+    "source_system": {"type": "string"},
+    "source_type": {"type": "string"},
+    "source_name": {"type": "string"},
+    "data_type": {"type": "string"},
+    "process_id": {"type": "string"},
+    "display_name": {"type": "string"},
+    "unit": {"type": "string"},
+    "value_type": {"type": "string"},
+    "device_scope": {"type": "string"},
+    "is_primary_waveform": {"type": "boolean"},
+    "is_primary_operation_signal": {"type": "boolean"},
+    "is_primary_protection_signal": {"type": "boolean"}
+  },
+  "additionalProperties": false
+}

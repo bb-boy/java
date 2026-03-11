@@ -1,0 +1,17 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Shot Meta",
+  "type": "object",
+  "required": ["shot_no"],
+  "properties": {
+    "shot_no": {"type": "integer"},
+    "shot_start_time": {"type": "string", "format": "date-time"},
+    "shot_end_time": {"type": "string", "format": "date-time"},
+    "expected_duration": {"type": "number"},
+    "actual_duration": {"type": "number"},
+    "status_code": {"type": "string"},
+    "status_reason": {"type": "string"},
+    "artifact_id": {"type": "string"}
+  },
+  "additionalProperties": false
+}

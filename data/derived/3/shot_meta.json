@@ -1,0 +1,21 @@
+{
+  "shot_no": 3,
+  "shot_start_time": "2022-07-19T06:22:55.215243Z",
+  "shot_end_time": "2022-07-19T06:22:55.614287Z",
+  "expected_duration_seconds": 0.02,
+  "actual_duration_seconds": 0.399044,
+  "status_code": "COMPLETE",
+  "status_reason": "actual duration is within expected tolerance",
+  "reference_channels": [
+    "InPower",
+    "NegVoltage",
+    "PosVoltage"
+  ],
+  "window_source": "tube_file_span",
+  "quality_flags": [
+    "shot_window_from_file_span",
+    "reference_window_hits_boundary"
+  ],
+  "source_system": "TDMS_DERIVED",
+  "authority_level": "PROVISIONAL"
+}

@@ -1,363 +1,346 @@
 #!/usr/bin/env python3
 """
-TDMS 文件监控工具 - 实时监听新文件并自动同步到 Kafka
+TDMS 文件监控与补扫：
+- 监控 TUBE 新文件，立即调用 tools/tdms_preprocessor.py 解析。
+- 定时扫描 TUBE 与 derived，发现未解析则触发解析。
 """
-import os
-import sys
-import time
+from __future__ import annotations
+
+import argparse
 import json
 import re
-import requests
 import subprocess
+import sys
+import time
+import urllib.error
+import urllib.request
+from dataclasses import dataclass
 from pathlib import Path
-from watchdog.observers import Observer
-from watchdog.events import FileSystemEventHandler
+from queue import Empty, Queue
+from threading import Lock
 
-# 配置
-CONFIG_FILE = "scan_config.json"
-API_BASE_URL = "http://localhost:8080"
-SYNC_DELAY = 2  # 文件创建后等待N秒（避免文件未完全写入）
+from watchdog.events import FileSystemEventHandler
+from watchdog.observers import Observer
+
+TDMS_EXTENSION = ".tdms"
+TDMS_INDEX_EXTENSION = ".tdms_index"
+INDEX_MARKER = "_index"
+SHOT_PATTERN = re.compile(r"^(\d+)")
+
+DEFAULT_FILE_PATTERN = r".*_Tube\.tdms$"
+DEFAULT_SCAN_INTERVAL_SECONDS = 600
+DEFAULT_STABILITY_CHECKS = 2
+DEFAULT_STABILITY_WAIT_MS = 100
+DEFAULT_PYTHON_BIN = "python3"
+DEFAULT_API_URL = "http://localhost:8080"
+INGEST_TIMEOUT_SECONDS = 30
+QUEUE_POLL_INTERVAL_SECONDS = 0.5
+
+def resolve_repo_root() -> Path:
+    return Path(__file__).resolve().parents[1]
+
+def resolve_dir(base_dir: Path, raw_path: str) -> Path:
+    path = Path(raw_path)
+    if not path.is_absolute():
+        path = (base_dir / path).resolve()
+    return path
+
+@dataclass(frozen=True)
+class WatchConfig:
+    watch_root: Path
+    output_root: Path
+    file_pattern: re.Pattern[str]
+    scan_interval_seconds: int
+    scan_now: bool
+    scan_only: bool
+    stability_checks: int
+    stability_wait_ms: int
+    recursive: bool
+    python_bin: str
+    preprocessor_path: Path
+    api_url: str
+
+class ShotQueue:
+    def __init__(self) -> None:
+        self._queue: Queue[int] = Queue()
+        self._pending: set[int] = set()
+        self._lock = Lock()
+
+    def add(self, shot_no: int) -> None:
+        with self._lock:
+            if shot_no in self._pending:
+                return
+            self._pending.add(shot_no)
+            self._queue.put(shot_no)
+
+    def pop(self, timeout_seconds: float) -> int | None:
+        try:
+            shot_no = self._queue.get(timeout=timeout_seconds)
+        except Empty:
+            return None
+        with self._lock:
+            self._pending.discard(shot_no)
+        return shot_no
 
 class TdmsFileHandler(FileSystemEventHandler):
-    """TDMS 文件事件处理器"""
-    
-    def __init__(self, api_url, only_keyword="", sync_delay=2, auto_scan=True):
-        self.api_url = api_url
-        self.only_keyword = only_keyword.lower()
-        self.sync_delay = sync_delay
-        self.auto_scan = auto_scan  # 是否自动运行 scan.py
-        self.processed_files = set()  # 防止重复处理
-        self.script_dir = os.path.dirname(os.path.abspath(__file__))
-        
-    def on_created(self, event):
-        """文件创建事件"""
+    def __init__(self, config: WatchConfig, queue: ShotQueue) -> None:
+        self._config = config
+        self._queue = queue
+
+    def on_created(self, event) -> None:
         if event.is_directory:
             return
-        
-        file_path = event.src_path
-        
-        # 只处理 .tdms 文件
-        if not file_path.lower().endswith('.tdms'):
+        self._handle_path(Path(event.src_path))
+
+    def on_moved(self, event) -> None:
+        if event.is_directory:
             return
-        
-        # 跳过索引文件
-        if '.tdms_index' in file_path or '_index' in file_path:
+        self._handle_path(Path(event.dest_path))
+
+    def _handle_path(self, path: Path) -> None:
+        if not is_candidate(path, self._config.file_pattern):
             return
-        
-        # 关键字过滤
-        if self.only_keyword and self.only_keyword not in os.path.basename(file_path).lower():
-            return
-        
-        # 防止重复处理
-        if file_path in self.processed_files:
-            return
-        
-        print(f"\n[检测到新文件] {file_path}")
-        self.processed_files.add(file_path)
-        
-        # 延迟处理（等待文件写入完成）
-        if self.sync_delay > 0:
-            print(f"  等待 {self.sync_delay} 秒以确保文件写入完成...")
-            time.sleep(self.sync_delay)
-        
-        # 提取炮号
-        shot_no = self.extract_shot_no(file_path)
+        shot_no = extract_shot_no(path)
         if shot_no is None:
-            print(f"  [警告] 无法从文件名提取炮号: {os.path.basename(file_path)}")
+            print(f"[监控] 无法提取炮号: {path}")
             return
-        
-        # 检测并生成操作日志 & 通道元数据
-        if self.auto_scan:
-            if self.ensure_operation_log(shot_no, file_path):
-                # 生成操作日志成功后，确保通道元数据文件存在
-                self.ensure_channels_json(shot_no, file_path)
-        
-        # 调用同步 API
-        self.trigger_sync(shot_no, file_path)
-    
-    def on_modified(self, event):
-        """文件修改事件（可选处理）"""
-        # 对于 TDMS 文件，通常只在创建时处理
-        # 如果需要处理修改事件，可以取消注释下面的代码
-        # self.on_created(event)
-        pass
-    
-    def extract_shot_no(self, file_path):
-        """从文件路径提取炮号"""
-        basename = os.path.basename(file_path)
-        # 匹配文件名开头的数字
-        match = re.search(r'^(\d+)', basename)
-        if match:
-            return int(match.group(1))
-        
-        # 尝试从父目录名提取
-        parent_dir = os.path.basename(os.path.dirname(file_path))
-        match = re.search(r'^(\d+)', parent_dir)
-        if match:
-            return int(match.group(1))
-        
-        return None
-    
-    def ensure_operation_log(self, shot_no, file_path):
-        """确保操作日志存在，如果不存在则运行 scan.py 生成"""
-        # 检测日志文件是否存在
-        log_dir = os.path.join(self.script_dir, "TUBE_logs", str(shot_no))
-        log_file = os.path.join(log_dir, f"{shot_no}_Tube_operation_log.txt")
-        
-        if os.path.exists(log_file):
-            print(f"  [日志] 操作日志已存在: {log_file}")
-            return True
-        
-        print(f"  [日志] 操作日志不存在，正在生成...")
-        
-        # 运行 scan.py 生成日志（只处理该炮号）
-        try:
-            scan_script = os.path.join(self.script_dir, "scan.py")
-            tdms_root = os.path.join(self.script_dir, "TUBE")
-            logs_output = os.path.join(self.script_dir, "TUBE_logs")
-            
-            # 使用 --only 参数只处理该炮号的文件
-            # 例如: --only "3_" 会匹配 3_Tube.tdms
-            only_pattern = f"{shot_no}_"
-            
-            cmd = [
-                "python3", scan_script,
-                "--root", tdms_root,
-                "--out", logs_output,
-                "--only", only_pattern
-            ]
-            
-            print(f"    执行命令: {' '.join(cmd)}")
-            
-            result = subprocess.run(
-                cmd,
-                cwd=self.script_dir,
-                capture_output=True,
-                text=True,
-                timeout=60  # 最多等待60秒
-            )
-            
-            if result.returncode == 0:
-                # 再次检查日志文件是否生成成功
-                if os.path.exists(log_file):
-                    print(f"  [成功] 操作日志已生成: {log_file}")
-                    return True
-                else:
-                    print(f"  [警告] scan.py 执行成功但日志文件未生成")
-                    print(f"    stdout: {result.stdout[:200]}")
-                    return False
-            else:
-                print(f"  [错误] scan.py 执行失败 (返回码: {result.returncode})")
-                print(f"    stderr: {result.stderr[:300]}")
-                return False
-                
-        except subprocess.TimeoutExpired:
-            print(f"  [错误] scan.py 执行超时（>60秒）")
-            return False
-        except Exception as e:
-            print(f"  [错误] 运行 scan.py 失败: {e}")
-            return False
+        print(f"[监控] 新文件: {path} -> shot {shot_no}")
+        self._queue.add(shot_no)
 
-    def ensure_channels_json(self, shot_no, file_path):
-        """确保通道 metadata JSON 存在，否则运行 extract_channels.py 生成"""
-        channels_dir = os.path.join(self.script_dir, "channels")
-        channels_file = os.path.join(channels_dir, f"channels_{shot_no}.json")
+def build_parser() -> argparse.ArgumentParser:
+    parser = argparse.ArgumentParser(description="TDMS 文件监控与补扫")
+    parser.add_argument("--watch-root", default="TUBE", help="TUBE 根目录（相对 data/ 或绝对路径）")
+    parser.add_argument("--output-root", default="derived", help="derived 根目录（相对 data/ 或绝对路径）")
+    parser.add_argument("--file-pattern", default=DEFAULT_FILE_PATTERN, help="TDMS 文件名正则")
+    parser.add_argument("--scan-interval-seconds", type=int, default=DEFAULT_SCAN_INTERVAL_SECONDS,
+                        help="补扫周期（秒）")
+    parser.add_argument("--scan-now", action="store_true", help="启动后立即补扫一次")
+    parser.add_argument("--scan-only", action="store_true",
+                        help="扫描一次缺失炮号并处理完毕后退出（不启动永久监控）")
+    parser.add_argument("--stability-checks", type=int, default=DEFAULT_STABILITY_CHECKS,
+                        help="稳定性检查次数")
+    parser.add_argument("--stability-wait-ms", type=int, default=DEFAULT_STABILITY_WAIT_MS,
+                        help="稳定性检查间隔（毫秒）")
+    parser.add_argument("--recursive", action=argparse.BooleanOptionalAction, default=True,
+                        help="递归监控子目录（默认开启，--no-recursive 关闭）")
+    parser.add_argument("--python", default=DEFAULT_PYTHON_BIN, help="Python 可执行文件")
+    parser.add_argument("--api-url", default=DEFAULT_API_URL, help="后端 API 地址")
+    parser.add_argument("--watch-dir", default=None, help="兼容旧参数：等同 --watch-root")
+    return parser
 
-        if os.path.exists(channels_file):
-            print(f"  [通道] 通道文件已存在: {channels_file}")
-            return True
-
-        print(f"  [通道] 通道文件不存在，正在生成...")
-
-        try:
-            extract_script = os.path.join(self.script_dir, "extract_channels.py")
-
-            cmd = [
-                "python3", extract_script,
-                "--shot", str(shot_no),
-                "--data-dir", os.path.join(self.script_dir, "TUBE"),
-                "--output-dir", os.path.join(self.script_dir, "channels")
-            ]
-
-            print(f"    执行命令: {' '.join(cmd)}")
-            result = subprocess.run(cmd, cwd=self.script_dir, capture_output=True, text=True, timeout=20)
-
-            if result.returncode == 0:
-                if os.path.exists(channels_file):
-                    print(f"  [成功] 通道文件已生成: {channels_file}")
-                    return True
-                else:
-                    print(f"  [警告] extract_channels.py 执行成功但未生成文件")
-                    print(f"    stdout: {result.stdout[:200]}")
-                    return False
-            else:
-                print(f"  [错误] extract_channels.py 执行失败 (返回码: {result.returncode})")
-                print(f"    stderr: {result.stderr[:300]}")
-                return False
-        except subprocess.TimeoutExpired:
-            print(f"  [错误] extract_channels.py 执行超时（>20秒）")
-            return False
-        except Exception as e:
-            print(f"  [错误] 运行 extract_channels.py 失败: {e}")
-            return False
-    
-    def trigger_sync(self, shot_no, file_path):
-        """触发同步 API"""
-        url = f"{self.api_url}/api/kafka/sync/shot"
-        params = {"shotNo": shot_no}
-        
-        try:
-            print(f"  [同步] 调用 API: {url}?shotNo={shot_no}")
-            response = requests.get(url, params=params, timeout=60)  # 增加超时到60秒
-            
-            if response.status_code == 200:
-                result = response.json()
-                if result.get("status") == "success":
-                    data = result.get("data", {})
-                    print(f"  [成功] 炮号 {shot_no} 同步完成")
-                    print(f"    - 元数据: {data.get('metadata', 0)}")
-                    print(f"    - 波形数据: {data.get('waveData', 0)} 通道")
-                    print(f"    - 操作日志: {data.get('operationLog', 0)} 条")
-                    print(f"    - PLC 互锁: {data.get('plcInterlock', 0)} 条")
-                else:
-                    error_msg = result.get('message', '未知错误')
-                    print(f"  [失败] {error_msg}")
-                    
-                    # 如果是元数据不存在的错误，尝试重新生成日志并重试
-                    if "元数据不存在" in error_msg or "元数据" in error_msg:
-                        print(f"  [重试] 检测到元数据问题，尝试重新生成日志...")
-                        if self.ensure_operation_log(shot_no, file_path):
-                            # 在生成日志后，确保通道元数据也存在
-                            self.ensure_channels_json(shot_no, file_path)
-                            print(f"  [重试] 日志已生成，重新调用同步 API...")
-                            time.sleep(1)
-                            # 递归调用（只重试一次，避免无限循环）
-                            response_retry = requests.get(url, params=params, timeout=60)
-                            if response_retry.status_code == 200:
-                                result_retry = response_retry.json()
-                                if result_retry.get("status") == "success":
-                                    data_retry = result_retry.get("data", {})
-                                    print(f"  [成功] 炮号 {shot_no} 重试同步成功")
-                                    print(f"    - 元数据: {data_retry.get('metadata', 0)}")
-                                    print(f"    - 波形数据: {data_retry.get('waveData', 0)} 通道")
-                                else:
-                                    print(f"  [失败] 重试仍然失败: {result_retry.get('message', '未知错误')}")
-            else:
-                print(f"  [错误] HTTP {response.status_code}: {response.text[:200]}")
-        
-        except requests.exceptions.ConnectionError:
-            print(f"  [错误] 无法连接到 API 服务器: {self.api_url}")
-            print(f"    请确保 Java 应用正在运行（端口 8080）")
-        except requests.exceptions.Timeout:
-            print(f"  [错误] API 请求超时（>60秒）")
-        except Exception as e:
-            print(f"  [错误] 同步失败: {e}")
-
-
-def load_config():
-    """加载配置文件"""
-    script_dir = os.path.dirname(os.path.abspath(__file__))
-    config_path = os.path.join(script_dir, CONFIG_FILE)
-    
-    if os.path.exists(config_path):
-        try:
-            with open(config_path, 'r', encoding='utf-8') as f:
-                config = json.load(f)
-            print(f"[配置] 已加载: {config_path}")
-            return config
-        except Exception as e:
-            print(f"[警告] 配置文件加载失败: {e}")
-    
-    # 返回默认配置
-    return {
-        "paths": {
-            "tdms_root_dir": "TUBE",
-            "only_keyword": ""
-        }
-    }
-
-
-def main():
-    import argparse
-    
-    parser = argparse.ArgumentParser(description="TDMS 文件实时监控工具")
-    parser.add_argument("--watch-dir", help="监控目录（默认从配置文件读取）")
-    parser.add_argument("--only", default=None, help="只处理包含关键字的文件")
-    parser.add_argument("--api-url", default=API_BASE_URL, help=f"API 服务器地址（默认: {API_BASE_URL}）")
-    parser.add_argument("--sync-delay", type=int, default=SYNC_DELAY, 
-                       help=f"文件创建后的延迟同步时间（秒，默认: {SYNC_DELAY}）")
-    parser.add_argument("--recursive", action="store_true", default=True,
-                       help="递归监控子目录（默认开启）")
-    
-    args = parser.parse_args()
-    
-    # 加载配置
-    config = load_config()
-    
-    # 确定监控目录
-    if args.watch_dir:
-        watch_dir = args.watch_dir
-    else:
-        watch_dir = config["paths"]["tdms_root_dir"]
-    
-    # 转换为绝对路径
-    script_dir = os.path.dirname(os.path.abspath(__file__))
-    watch_path = os.path.join(script_dir, watch_dir)
-    
-    if not os.path.exists(watch_path):
-        print(f"[错误] 监控目录不存在: {watch_path}")
-        sys.exit(1)
-    
-    # 确定关键字过滤
-    only_keyword = args.only if args.only is not None else config["paths"].get("only_keyword", "")
-    
-    # 打印配置信息
-    print("=" * 60)
-    print("TDMS 文件实时监控工具")
-    print("=" * 60)
-    print(f"监控目录: {watch_path}")
-    print(f"关键字过滤: {only_keyword if only_keyword else '(无)'}")
-    print(f"API 地址: {args.api_url}")
-    print(f"同步延迟: {args.sync_delay} 秒")
-    print(f"递归监控: {'是' if args.recursive else '否'}")
-    print("=" * 60)
-    print("\n按 Ctrl+C 停止监控\n")
-    
-    # 测试 API 连接
-    try:
-        response = requests.get(f"{args.api_url}/actuator/health", timeout=5)
-        if response.status_code == 200:
-            print(f"[连接] API 服务器正常运行 ✓\n")
-        else:
-            print(f"[警告] API 服务器响应异常: {response.status_code}\n")
-    except:
-        print(f"[警告] 无法连接到 API 服务器: {args.api_url}")
-        print(f"[提示] 请确保 Java 应用正在运行\n")
-    
-    # 创建事件处理器
-    event_handler = TdmsFileHandler(
-        api_url=args.api_url,
-        only_keyword=only_keyword,
-        sync_delay=args.sync_delay
+def build_config(args: argparse.Namespace) -> WatchConfig:
+    base_dir = Path(__file__).resolve().parent
+    watch_raw = args.watch_dir if args.watch_dir else args.watch_root
+    watch_root = resolve_dir(base_dir, watch_raw)
+    output_root = resolve_dir(base_dir, args.output_root)
+    if not watch_root.is_dir():
+        raise ValueError(f"watch root missing: {watch_root}")
+    if args.scan_interval_seconds <= 0:
+        raise ValueError("scan interval must be positive")
+    if args.stability_checks <= 0:
+        raise ValueError("stability checks must be positive")
+    if args.stability_wait_ms <= 0:
+        raise ValueError("stability wait must be positive")
+    output_root.mkdir(parents=True, exist_ok=True)
+    file_pattern = re.compile(args.file_pattern)
+    repo_root = resolve_repo_root()
+    preprocessor_path = repo_root / "tools" / "tdms_preprocessor.py"
+    if not preprocessor_path.is_file():
+        raise ValueError(f"preprocessor missing: {preprocessor_path}")
+    return WatchConfig(
+        watch_root=watch_root,
+        output_root=output_root,
+        file_pattern=file_pattern,
+        scan_interval_seconds=args.scan_interval_seconds,
+        scan_now=bool(args.scan_now),
+        scan_only=bool(args.scan_only),
+        stability_checks=args.stability_checks,
+        stability_wait_ms=args.stability_wait_ms,
+        recursive=bool(args.recursive),
+        python_bin=args.python,
+        preprocessor_path=preprocessor_path,
+        api_url=args.api_url.rstrip("/"),
     )
-    
-    # 创建观察者
-    observer = Observer()
-    observer.schedule(event_handler, watch_path, recursive=args.recursive)
-    observer.start()
-    
-    print(f"[启动] 正在监控 {watch_path} ...\n")
-    
-    try:
-        while True:
-            time.sleep(1)
-    except KeyboardInterrupt:
-        print("\n\n[停止] 收到中断信号，正在停止监控...")
-        observer.stop()
-    
-    observer.join()
-    print("[完成] 监控已停止")
 
+def is_candidate(path: Path, pattern: re.Pattern[str]) -> bool:
+    name = path.name
+    lower = name.lower()
+    if not lower.endswith(TDMS_EXTENSION):
+        return False
+    if lower.endswith(TDMS_INDEX_EXTENSION) or INDEX_MARKER in lower:
+        return False
+    return bool(pattern.match(name))
+
+def extract_shot_no(path: Path) -> int | None:
+    name_match = match_shot_no(path.name)
+    if name_match is not None:
+        return name_match
+    parent = path.parent.name if path.parent else ""
+    return match_shot_no(parent)
+
+def match_shot_no(text: str) -> int | None:
+    match = SHOT_PATTERN.match(text)
+    if not match:
+        return None
+    return int(match.group(1))
+
+def derived_exists(output_root: Path, shot_no: int) -> bool:
+    from tdms_derive.constants import ARTIFACT_FILE
+
+    return (output_root / str(shot_no) / ARTIFACT_FILE).is_file()
+
+def discover_tube_shots(config: WatchConfig) -> set[int]:
+    shots: set[int] = set()
+    for path in config.watch_root.rglob(f"*{TDMS_EXTENSION}"):
+        if not is_candidate(path, config.file_pattern):
+            continue
+        shot_no = extract_shot_no(path)
+        if shot_no is None:
+            continue
+        shots.add(shot_no)
+    return shots
+
+def discover_derived_shots(output_root: Path) -> set[int]:
+    from tdms_derive.constants import ARTIFACT_FILE
+
+    if not output_root.is_dir():
+        return set()
+    shots: set[int] = set()
+    for child in output_root.iterdir():
+        if not child.is_dir():
+            continue
+        if not child.name.isdigit():
+            continue
+        if (child / ARTIFACT_FILE).is_file():
+            shots.add(int(child.name))
+    return shots
+
+def enqueue_missing_shots(config: WatchConfig, queue: ShotQueue) -> None:
+    tube_shots = discover_tube_shots(config)
+    derived_shots = discover_derived_shots(config.output_root)
+    missing = sorted(tube_shots - derived_shots)
+    for shot_no in missing:
+        print(f"[补扫] 发现未解析炮号: {shot_no}")
+        queue.add(shot_no)
+
+def run_preprocessor_cli(config: WatchConfig, shot_no: int) -> None:
+    cmd = [
+        config.python_bin,
+        str(config.preprocessor_path),
+        "--shot",
+        str(shot_no),
+        "--input-root",
+        str(config.watch_root),
+        "--output-root",
+        str(config.output_root),
+        "--stability-checks",
+        str(config.stability_checks),
+        "--stability-wait-ms",
+        str(config.stability_wait_ms),
+    ]
+    print(f"[解析] 运行: {' '.join(cmd)}")
+    subprocess.run(cmd, check=True)
+
+def ingest_shot(config: WatchConfig, shot_no: int) -> bool:
+    url = f"{config.api_url}/api/ingest/shot?shotNo={shot_no}"
+    print(f"[同步] POST {url}")
+    try:
+        req = urllib.request.Request(url, method="POST", data=b"")
+        with urllib.request.urlopen(req, timeout=INGEST_TIMEOUT_SECONDS) as resp:
+            body = json.loads(resp.read().decode())
+            print(f"[同步] 炮号 {shot_no} -> {body.get('status', 'ok')}")
+            return True
+    except urllib.error.HTTPError as exc:
+        print(f"[同步失败] 炮号 {shot_no}: HTTP {exc.code}")
+        return False
+    except Exception as exc:  # noqa: BLE001
+        print(f"[同步失败] 炮号 {shot_no}: {exc}")
+        return False
+
+def process_shot(config: WatchConfig, shot_no: int) -> None:
+    if derived_exists(config.output_root, shot_no):
+        print(f"[跳过] 已解析: {shot_no}，直接同步")
+        ingest_shot(config, shot_no)
+        return
+    try:
+        run_preprocessor_cli(config, shot_no)
+        print(f"[完成] 解析完成: {shot_no}")
+        ingest_shot(config, shot_no)
+    except subprocess.CalledProcessError as exc:
+        print(f"[错误] 炮号 {shot_no} 解析失败 (exit {exc.returncode})，跳过继续")
+    except Exception as exc:  # noqa: BLE001
+        print(f"[错误] 炮号 {shot_no} 意外错误: {exc}，跳过继续")
+
+def run_loop(config: WatchConfig, queue: ShotQueue) -> None:
+    next_scan = time.monotonic() + config.scan_interval_seconds
+    while True:
+        now = time.monotonic()
+        if now >= next_scan:
+            enqueue_missing_shots(config, queue)
+            next_scan = now + config.scan_interval_seconds
+        shot_no = queue.pop(QUEUE_POLL_INTERVAL_SECONDS)
+        if shot_no is None:
+            continue
+        process_shot(config, shot_no)
+
+def attach_import_path() -> None:
+    repo_root = resolve_repo_root()
+    tools_dir = repo_root / "tools"
+    tools_path = str(tools_dir)
+    if tools_path not in sys.path:
+        sys.path.insert(0, tools_path)
+
+def main() -> None:
+    attach_import_path()
+    parser = build_parser()
+    args = parser.parse_args()
+    config = build_config(args)
+
+    print("=" * 60)
+    print("TDMS 文件监控与补扫")
+    print("=" * 60)
+    print(f"监控目录: {config.watch_root}")
+    print(f"派生目录: {config.output_root}")
+    print(f"文件规则: {config.file_pattern.pattern}")
+    print(f"补扫周期: {config.scan_interval_seconds} 秒")
+    print(f"启动补扫: {'是' if config.scan_now else '否'}")
+    print(f"一次性扫: {'是' if config.scan_only else '否'}")
+    print(f"稳定检查: {config.stability_checks} 次 / {config.stability_wait_ms} ms")
+    print(f"递归监控: {'是' if config.recursive else '否'}")
+    print(f"API 地址: {config.api_url}")
+    print("=" * 60)
+
+    queue = ShotQueue()
+    event_handler = TdmsFileHandler(config, queue)
+    observer = Observer()
+    observer.schedule(event_handler, str(config.watch_root), recursive=config.recursive)
+    observer.start()
+    print(f"[启动] 正在监控 {config.watch_root}")
+
+    if config.scan_now:
+        enqueue_missing_shots(config, queue)
+
+    # scan-only 模式：处理完当前队列后直接退出，不做持久监控
+    if args.scan_only:
+        observer.stop()
+        observer.join()
+        print("[补扫] 开始一次性扫描...")
+        enqueue_missing_shots(config, queue)
+        while True:
+            shot_no = queue.pop(timeout_seconds=0.1)
+            if shot_no is None:
+                break
+            process_shot(config, shot_no)
+        print("[补扫] 扫描完成，退出")
+        return
+
+    try:
+        run_loop(config, queue)
+    except KeyboardInterrupt:
+        print("\n[停止] 收到中断信号，停止监控")
+    finally:
+        observer.stop()
+        observer.join()
 
 if __name__ == "__main__":
     main()

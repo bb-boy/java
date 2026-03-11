@@ -1,0 +1,791 @@
+{
+  "shot_no": 4,
+  "request_id": "waveform-ingest:4",
+  "measurement": "waveform",
+  "source_system": "TDMS_DERIVED",
+  "authority_level": "PROVISIONAL",
+  "sha256_hex": "ac8f9243322ddbea81bd302e065315a3e33dbc837adb5e9b70c6b873cfba2582",
+  "channel_scope": "ALL",
+  "ingest_mode": "FULL",
+  "signals": [
+    {
+      "shot_no": 4,
+      "artifact_id": "tdms:4:tube:ac8f9243322d",
+      "source_role": "PRIMARY",
+      "data_type": "TUBE",
+      "channel_name": "InPower",
+      "process_id": "ECRH:RF:IN_POWER",
+      "file_path": "/home/pl/java/data/TUBE/4/4_Tube.tdms",
+      "sha256_hex": "ac8f9243322ddbea81bd302e065315a3e33dbc837adb5e9b70c6b873cfba2582",
+      "sample_count": 10400,
+      "declared_sample_count": 1,
+      "sample_interval_seconds": 0.001,
+      "start_time": "2023-03-29T04:43:39.995073Z",
+      "end_time": "2023-03-29T04:43:50.394073Z",
+      "shot_range": [
+        0,
+        10399
+      ]
+    },
+    {
+      "shot_no": 4,
+      "artifact_id": "tdms:4:tube:ac8f9243322d",
+      "source_role": "PRIMARY",
+      "data_type": "TUBE",
+      "channel_name": "RefPower",
+      "process_id": "ECRH:RF:REF_POWER",
+      "file_path": "/home/pl/java/data/TUBE/4/4_Tube.tdms",
+      "sha256_hex": "ac8f9243322ddbea81bd302e065315a3e33dbc837adb5e9b70c6b873cfba2582",
+      "sample_count": 10400,
+      "declared_sample_count": 1,
+      "sample_interval_seconds": 0.001,
+      "start_time": "2023-03-29T04:43:39.995084Z",
+      "end_time": "2023-03-29T04:43:50.394084Z",
+      "shot_range": [
+        0,
+        10399
+      ]
+    },
+    {
+      "shot_no": 4,
+      "artifact_id": "tdms:4:tube:ac8f9243322d",
+      "source_role": "PRIMARY",
+      "data_type": "TUBE",
+      "channel_name": "NegVoltage",
+      "process_id": "ECRH:HVPS:NEG_VOLT",
+      "file_path": "/home/pl/java/data/TUBE/4/4_Tube.tdms",
+      "sha256_hex": "ac8f9243322ddbea81bd302e065315a3e33dbc837adb5e9b70c6b873cfba2582",
+      "sample_count": 10400,
+      "declared_sample_count": 1,
+      "sample_interval_seconds": 0.001,
+      "start_time": "2023-03-29T04:43:39.995095Z",
+      "end_time": "2023-03-29T04:43:50.394095Z",
+      "shot_range": [
+        0,
+        10399
+      ]
+    },
+    {
+      "shot_no": 4,
+      "artifact_id": "tdms:4:tube:ac8f9243322d",
+      "source_role": "PRIMARY",
+      "data_type": "TUBE",
+      "channel_name": "NegCurrent",
+      "process_id": "ECRH:HVPS:NEG_CURRENT",
+      "file_path": "/home/pl/java/data/TUBE/4/4_Tube.tdms",
+      "sha256_hex": "ac8f9243322ddbea81bd302e065315a3e33dbc837adb5e9b70c6b873cfba2582",
+      "sample_count": 10400,
+      "declared_sample_count": 1,
+      "sample_interval_seconds": 0.001,
+      "start_time": "2023-03-29T04:43:39.995106Z",
+      "end_time": "2023-03-29T04:43:50.394106Z",
+      "shot_range": [
+        0,
+        10399
+      ]
+    },
+    {
+      "shot_no": 4,
+      "artifact_id": "tdms:4:tube:ac8f9243322d",
+      "source_role": "PRIMARY",
+      "data_type": "TUBE",
+      "channel_name": "PosVoltage",
+      "process_id": "ECRH:HVPS:POS_VOLT",
+      "file_path": "/home/pl/java/data/TUBE/4/4_Tube.tdms",
+      "sha256_hex": "ac8f9243322ddbea81bd302e065315a3e33dbc837adb5e9b70c6b873cfba2582",
+      "sample_count": 10400,
+      "declared_sample_count": 1,
+      "sample_interval_seconds": 0.001,
+      "start_time": "2023-03-29T04:43:39.995117Z",
+      "end_time": "2023-03-29T04:43:50.394117Z",
+      "shot_range": [
+        0,
+        10399
+      ]
+    },
+    {
+      "shot_no": 4,
+      "artifact_id": "tdms:4:tube:ac8f9243322d",
+      "source_role": "PRIMARY",
+      "data_type": "TUBE",
+      "channel_name": "PosCurrent",
+      "process_id": "ECRH:HVPS:POS_CURRENT",
+      "file_path": "/home/pl/java/data/TUBE/4/4_Tube.tdms",
+      "sha256_hex": "ac8f9243322ddbea81bd302e065315a3e33dbc837adb5e9b70c6b873cfba2582",
+      "sample_count": 10400,
+      "declared_sample_count": 1,
+      "sample_interval_seconds": 0.001,
+      "start_time": "2023-03-29T04:43:39.995128Z",
+      "end_time": "2023-03-29T04:43:50.394128Z",
+      "shot_range": [
+        0,
+        10399
+      ]
+    },
+    {
+      "shot_no": 4,
+      "artifact_id": "tdms:4:tube:ac8f9243322d",
+      "source_role": "PRIMARY",
+      "data_type": "TUBE",
+      "channel_name": "FilaVoltage",
+      "process_id": "ECRH:GYROTRON:FILA_VOLT",
+      "file_path": "/home/pl/java/data/TUBE/4/4_Tube.tdms",
+      "sha256_hex": "ac8f9243322ddbea81bd302e065315a3e33dbc837adb5e9b70c6b873cfba2582",
+      "sample_count": 10400,
+      "declared_sample_count": 1,
+      "sample_interval_seconds": 0.001,
+      "start_time": "2023-03-29T04:43:39.995139Z",
+      "end_time": "2023-03-29T04:43:50.394139Z",
+      "shot_range": [
+        0,
+        10399
+      ]
+    },
+    {
+      "shot_no": 4,
+      "artifact_id": "tdms:4:tube:ac8f9243322d",
+      "source_role": "PRIMARY",
+      "data_type": "TUBE",
+      "channel_name": "FilaCurrent",
+      "process_id": "ECRH:GYROTRON:FILA_CURRENT",
+      "file_path": "/home/pl/java/data/TUBE/4/4_Tube.tdms",
+      "sha256_hex": "ac8f9243322ddbea81bd302e065315a3e33dbc837adb5e9b70c6b873cfba2582",
+      "sample_count": 10400,
+      "declared_sample_count": 1,
+      "sample_interval_seconds": 0.001,
+      "start_time": "2023-03-29T04:43:39.995150Z",
+      "end_time": "2023-03-29T04:43:50.394150Z",
+      "shot_range": [
+        0,
+        10399
+      ]
+    },
+    {
+      "shot_no": 4,
+      "artifact_id": "tdms:4:tube:ac8f9243322d",
+      "source_role": "PRIMARY",
+      "data_type": "TUBE",
+      "channel_name": "TiPumpCurrent",
+      "process_id": "ECRH:VACUUM:TI_PUMP_CURRENT",
+      "file_path": "/home/pl/java/data/TUBE/4/4_Tube.tdms",
+      "sha256_hex": "ac8f9243322ddbea81bd302e065315a3e33dbc837adb5e9b70c6b873cfba2582",
+      "sample_count": 10400,
+      "declared_sample_count": 1,
+      "sample_interval_seconds": 0.001,
+      "start_time": "2023-03-29T04:43:39.995161Z",
+      "end_time": "2023-03-29T04:43:50.394161Z",
+      "shot_range": [
+        0,
+        10399
+      ]
+    },
+    {
+      "shot_no": 4,
+      "artifact_id": "tdms:4:water:9d5f564bcd7c",
+      "source_role": "AUXILIARY",
+      "data_type": "WATER",
+      "channel_name": "140阳极T1进",
+      "process_id": "ECRH:COOLING:TEMP_140_ANODE_T1_INLET",
+      "file_path": "/home/pl/java/data/TUBE/4/4_Water.tdms",
+      "sha256_hex": "9d5f564bcd7cd7a494fb4ac3f241eb437f8f88a1a8b43a54ed298b4220ef7e7d",
+      "sample_count": 10225,
+      "declared_sample_count": 1,
+      "sample_interval_seconds": 0.001,
+      "start_time": "2023-03-29T04:43:39.995061Z",
+      "end_time": "2023-03-29T04:43:50.219061Z",
+      "shot_range": [
+        0,
+        10224
+      ]
+    },
+    {
+      "shot_no": 4,
+      "artifact_id": "tdms:4:water:9d5f564bcd7c",
+      "source_role": "AUXILIARY",
+      "data_type": "WATER",
+      "channel_name": "140阳极T1回",
+      "process_id": "ECRH:COOLING:TEMP_140_ANODE_T1_RETURN",
+      "file_path": "/home/pl/java/data/TUBE/4/4_Water.tdms",
+      "sha256_hex": "9d5f564bcd7cd7a494fb4ac3f241eb437f8f88a1a8b43a54ed298b4220ef7e7d",
+      "sample_count": 10225,
+      "declared_sample_count": 1,
+      "sample_interval_seconds": 0.001,
+      "start_time": "2023-03-29T04:43:39.995072Z",
+      "end_time": "2023-03-29T04:43:50.219072Z",
+      "shot_range": [
+        0,
+        10224
+      ]
+    },
+    {
+      "shot_no": 4,
+      "artifact_id": "tdms:4:water:9d5f564bcd7c",
+      "source_role": "AUXILIARY",
+      "data_type": "WATER",
+      "channel_name": "140主窗口T2回",
+      "process_id": "ECRH:COOLING:TEMP_140_MAIN_WINDOW_T2_RETURN",
+      "file_path": "/home/pl/java/data/TUBE/4/4_Water.tdms",
+      "sha256_hex": "9d5f564bcd7cd7a494fb4ac3f241eb437f8f88a1a8b43a54ed298b4220ef7e7d",
+      "sample_count": 10225,
+      "declared_sample_count": 1,
+      "sample_interval_seconds": 0.001,
+      "start_time": "2023-03-29T04:43:39.995083Z",
+      "end_time": "2023-03-29T04:43:50.219083Z",
+      "shot_range": [
+        0,
+        10224
+      ]
+    },
+    {
+      "shot_no": 4,
+      "artifact_id": "tdms:4:water:9d5f564bcd7c",
+      "source_role": "AUXILIARY",
+      "data_type": "WATER",
+      "channel_name": "140收集极T5进",
+      "process_id": "ECRH:COOLING:TEMP_140_COLLECTOR_T5_INLET",
+      "file_path": "/home/pl/java/data/TUBE/4/4_Water.tdms",
+      "sha256_hex": "9d5f564bcd7cd7a494fb4ac3f241eb437f8f88a1a8b43a54ed298b4220ef7e7d",
+      "sample_count": 10225,
+      "declared_sample_count": 1,
+      "sample_interval_seconds": 0.001,
+      "start_time": "2023-03-29T04:43:39.995094Z",
+      "end_time": "2023-03-29T04:43:50.219094Z",
+      "shot_range": [
+        0,
+        10224
+      ]
+    },
+    {
+      "shot_no": 4,
+      "artifact_id": "tdms:4:water:9d5f564bcd7c",
+      "source_role": "AUXILIARY",
+      "data_type": "WATER",
+      "channel_name": "140收集极回",
+      "process_id": "ECRH:COOLING:TEMP_140_COLLECTOR_RETURN",
+      "file_path": "/home/pl/java/data/TUBE/4/4_Water.tdms",
+      "sha256_hex": "9d5f564bcd7cd7a494fb4ac3f241eb437f8f88a1a8b43a54ed298b4220ef7e7d",
+      "sample_count": 10225,
+      "declared_sample_count": 1,
+      "sample_interval_seconds": 0.001,
+      "start_time": "2023-03-29T04:43:39.995105Z",
+      "end_time": "2023-03-29T04:43:50.219105Z",
+      "shot_range": [
+        0,
+        10224
+      ]
+    },
+    {
+      "shot_no": 4,
+      "artifact_id": "tdms:4:water:9d5f564bcd7c",
+      "source_role": "AUXILIARY",
+      "data_type": "WATER",
+      "channel_name": "140镜子T6回",
+      "process_id": "ECRH:COOLING:TEMP_140_MIRROR_T6_RETURN",
+      "file_path": "/home/pl/java/data/TUBE/4/4_Water.tdms",
+      "sha256_hex": "9d5f564bcd7cd7a494fb4ac3f241eb437f8f88a1a8b43a54ed298b4220ef7e7d",
+      "sample_count": 10225,
+      "declared_sample_count": 1,
+      "sample_interval_seconds": 0.001,
+      "start_time": "2023-03-29T04:43:39.995116Z",
+      "end_time": "2023-03-29T04:43:50.219116Z",
+      "shot_range": [
+        0,
+        10224
+      ]
+    },
+    {
+      "shot_no": 4,
+      "artifact_id": "tdms:4:water:9d5f564bcd7c",
+      "source_role": "AUXILIARY",
+      "data_type": "WATER",
+      "channel_name": "140管体T7回",
+      "process_id": "ECRH:COOLING:TEMP_140_TUBE_BODY_T7_RETURN",
+      "file_path": "/home/pl/java/data/TUBE/4/4_Water.tdms",
+      "sha256_hex": "9d5f564bcd7cd7a494fb4ac3f241eb437f8f88a1a8b43a54ed298b4220ef7e7d",
+      "sample_count": 10225,
+      "declared_sample_count": 1,
+      "sample_interval_seconds": 0.001,
+      "start_time": "2023-03-29T04:43:39.995127Z",
+      "end_time": "2023-03-29T04:43:50.219127Z",
+      "shot_range": [
+        0,
+        10224
+      ]
+    },
+    {
+      "shot_no": 4,
+      "artifact_id": "tdms:4:water:9d5f564bcd7c",
+      "source_role": "AUXILIARY",
+      "data_type": "WATER",
+      "channel_name": "140MOU T8回",
+      "process_id": "ECRH:COOLING:TEMP_140_MOU_T8_RETURN",
+      "file_path": "/home/pl/java/data/TUBE/4/4_Water.tdms",
+      "sha256_hex": "9d5f564bcd7cd7a494fb4ac3f241eb437f8f88a1a8b43a54ed298b4220ef7e7d",
+      "sample_count": 10225,
+      "declared_sample_count": 1,
+      "sample_interval_seconds": 0.001,
+      "start_time": "2023-03-29T04:43:39.995138Z",
+      "end_time": "2023-03-29T04:43:50.219138Z",
+      "shot_range": [
+        0,
+        10224
+      ]
+    },
+    {
+      "shot_no": 4,
+      "artifact_id": "tdms:4:water:9d5f564bcd7c",
+      "source_role": "AUXILIARY",
+      "data_type": "WATER",
+      "channel_name": "140小负载T9回",
+      "process_id": "ECRH:COOLING:TEMP_140_SMALL_LOAD_T9_RETURN",
+      "file_path": "/home/pl/java/data/TUBE/4/4_Water.tdms",
+      "sha256_hex": "9d5f564bcd7cd7a494fb4ac3f241eb437f8f88a1a8b43a54ed298b4220ef7e7d",
+      "sample_count": 10225,
+      "declared_sample_count": 1,
+      "sample_interval_seconds": 0.001,
+      "start_time": "2023-03-29T04:43:39.995149Z",
+      "end_time": "2023-03-29T04:43:50.219149Z",
+      "shot_range": [
+        0,
+        10224
+      ]
+    },
+    {
+      "shot_no": 4,
+      "artifact_id": "tdms:4:water:9d5f564bcd7c",
+      "source_role": "AUXILIARY",
+      "data_type": "WATER",
+      "channel_name": "140MOU过渡段T10回",
+      "process_id": "ECRH:COOLING:TEMP_140_MOU_TRANSITION_T10_RETURN",
+      "file_path": "/home/pl/java/data/TUBE/4/4_Water.tdms",
+      "sha256_hex": "9d5f564bcd7cd7a494fb4ac3f241eb437f8f88a1a8b43a54ed298b4220ef7e7d",
+      "sample_count": 10225,
+      "declared_sample_count": 1,
+      "sample_interval_seconds": 0.001,
+      "start_time": "2023-03-29T04:43:39.995160Z",
+      "end_time": "2023-03-29T04:43:50.219160Z",
+      "shot_range": [
+        0,
+        10224
+      ]
+    },
+    {
+      "shot_no": 4,
+      "artifact_id": "tdms:4:water:9d5f564bcd7c",
+      "source_role": "AUXILIARY",
+      "data_type": "WATER",
+      "channel_name": "140长负载T11回",
+      "process_id": "ECRH:COOLING:TEMP_140_LONG_LOAD_T11_RETURN",
+      "file_path": "/home/pl/java/data/TUBE/4/4_Water.tdms",
+      "sha256_hex": "9d5f564bcd7cd7a494fb4ac3f241eb437f8f88a1a8b43a54ed298b4220ef7e7d",
+      "sample_count": 10225,
+      "declared_sample_count": 1,
+      "sample_interval_seconds": 0.001,
+      "start_time": "2023-03-29T04:43:39.995171Z",
+      "end_time": "2023-03-29T04:43:50.219171Z",
+      "shot_range": [
+        0,
+        10224
+      ]
+    },
+    {
+      "shot_no": 4,
+      "artifact_id": "tdms:4:water:9d5f564bcd7c",
+      "source_role": "AUXILIARY",
+      "data_type": "WATER",
+      "channel_name": "140tankload T12回",
+      "process_id": "ECRH:COOLING:TEMP_140_TANKLOAD_T12_RETURN",
+      "file_path": "/home/pl/java/data/TUBE/4/4_Water.tdms",
+      "sha256_hex": "9d5f564bcd7cd7a494fb4ac3f241eb437f8f88a1a8b43a54ed298b4220ef7e7d",
+      "sample_count": 10225,
+      "declared_sample_count": 1,
+      "sample_interval_seconds": 0.001,
+      "start_time": "2023-03-29T04:43:39.995182Z",
+      "end_time": "2023-03-29T04:43:50.219182Z",
+      "shot_range": [
+        0,
+        10224
+      ]
+    },
+    {
+      "shot_no": 4,
+      "artifact_id": "tdms:4:water:9d5f564bcd7c",
+      "source_role": "AUXILIARY",
+      "data_type": "WATER",
+      "channel_name": "140极化器T13回",
+      "process_id": "ECRH:COOLING:TEMP_140_POLARIZER_T13_RETURN",
+      "file_path": "/home/pl/java/data/TUBE/4/4_Water.tdms",
+      "sha256_hex": "9d5f564bcd7cd7a494fb4ac3f241eb437f8f88a1a8b43a54ed298b4220ef7e7d",
+      "sample_count": 10225,
+      "declared_sample_count": 1,
+      "sample_interval_seconds": 0.001,
+      "start_time": "2023-03-29T04:43:39.995193Z",
+      "end_time": "2023-03-29T04:43:50.219193Z",
+      "shot_range": [
+        0,
+        10224
+      ]
+    },
+    {
+      "shot_no": 4,
+      "artifact_id": "tdms:4:water:9d5f564bcd7c",
+      "source_role": "AUXILIARY",
+      "data_type": "WATER",
+      "channel_name": "140弯头T14回",
+      "process_id": "ECRH:COOLING:TEMP_140_ELBOW_T14_RETURN",
+      "file_path": "/home/pl/java/data/TUBE/4/4_Water.tdms",
+      "sha256_hex": "9d5f564bcd7cd7a494fb4ac3f241eb437f8f88a1a8b43a54ed298b4220ef7e7d",
+      "sample_count": 10225,
+      "declared_sample_count": 1,
+      "sample_interval_seconds": 0.001,
+      "start_time": "2023-03-29T04:43:39.995204Z",
+      "end_time": "2023-03-29T04:43:50.219204Z",
+      "shot_range": [
+        0,
+        10224
+      ]
+    },
+    {
+      "shot_no": 4,
+      "artifact_id": "tdms:4:water:9d5f564bcd7c",
+      "source_role": "AUXILIARY",
+      "data_type": "WATER",
+      "channel_name": "140金刚石窗T15回",
+      "process_id": "ECRH:COOLING:TEMP_140_DIAMOND_WINDOW_T15_RETURN",
+      "file_path": "/home/pl/java/data/TUBE/4/4_Water.tdms",
+      "sha256_hex": "9d5f564bcd7cd7a494fb4ac3f241eb437f8f88a1a8b43a54ed298b4220ef7e7d",
+      "sample_count": 10225,
+      "declared_sample_count": 1,
+      "sample_interval_seconds": 0.001,
+      "start_time": "2023-03-29T04:43:39.995215Z",
+      "end_time": "2023-03-29T04:43:50.219215Z",
+      "shot_range": [
+        0,
+        10224
+      ]
+    },
+    {
+      "shot_no": 4,
+      "artifact_id": "tdms:4:water:9d5f564bcd7c",
+      "source_role": "AUXILIARY",
+      "data_type": "WATER",
+      "channel_name": "140器件T16回",
+      "process_id": "ECRH:COOLING:TEMP_140_DEVICE_T16_RETURN",
+      "file_path": "/home/pl/java/data/TUBE/4/4_Water.tdms",
+      "sha256_hex": "9d5f564bcd7cd7a494fb4ac3f241eb437f8f88a1a8b43a54ed298b4220ef7e7d",
+      "sample_count": 10225,
+      "declared_sample_count": 1,
+      "sample_interval_seconds": 0.001,
+      "start_time": "2023-03-29T04:43:39.995226Z",
+      "end_time": "2023-03-29T04:43:50.219226Z",
+      "shot_range": [
+        0,
+        10224
+      ]
+    },
+    {
+      "shot_no": 4,
+      "artifact_id": "tdms:4:water:9d5f564bcd7c",
+      "source_role": "AUXILIARY",
+      "data_type": "WATER",
+      "channel_name": "140俄大负载A T3回",
+      "process_id": "ECRH:COOLING:TEMP_140_RUS_LOAD_A_T3_RETURN",
+      "file_path": "/home/pl/java/data/TUBE/4/4_Water.tdms",
+      "sha256_hex": "9d5f564bcd7cd7a494fb4ac3f241eb437f8f88a1a8b43a54ed298b4220ef7e7d",
+      "sample_count": 10225,
+      "declared_sample_count": 1,
+      "sample_interval_seconds": 0.001,
+      "start_time": "2023-03-29T04:43:39.995237Z",
+      "end_time": "2023-03-29T04:43:50.219237Z",
+      "shot_range": [
+        0,
+        10224
+      ]
+    },
+    {
+      "shot_no": 4,
+      "artifact_id": "tdms:4:water:9d5f564bcd7c",
+      "source_role": "AUXILIARY",
+      "data_type": "WATER",
+      "channel_name": "140俄大负载M T4回",
+      "process_id": "ECRH:COOLING:TEMP_140_RUS_LOAD_M_T4_RETURN",
+      "file_path": "/home/pl/java/data/TUBE/4/4_Water.tdms",
+      "sha256_hex": "9d5f564bcd7cd7a494fb4ac3f241eb437f8f88a1a8b43a54ed298b4220ef7e7d",
+      "sample_count": 10225,
+      "declared_sample_count": 1,
+      "sample_interval_seconds": 0.001,
+      "start_time": "2023-03-29T04:43:39.995248Z",
+      "end_time": "2023-03-29T04:43:50.219248Z",
+      "shot_range": [
+        0,
+        10224
+      ]
+    },
+    {
+      "shot_no": 4,
+      "artifact_id": "tdms:4:water:9d5f564bcd7c",
+      "source_role": "AUXILIARY",
+      "data_type": "WATER",
+      "channel_name": "140滤波器T17回",
+      "process_id": "ECRH:COOLING:TEMP_140_FILTER_T17_RETURN",
+      "file_path": "/home/pl/java/data/TUBE/4/4_Water.tdms",
+      "sha256_hex": "9d5f564bcd7cd7a494fb4ac3f241eb437f8f88a1a8b43a54ed298b4220ef7e7d",
+      "sample_count": 10225,
+      "declared_sample_count": 1,
+      "sample_interval_seconds": 0.001,
+      "start_time": "2023-03-29T04:43:39.995259Z",
+      "end_time": "2023-03-29T04:43:50.219259Z",
+      "shot_range": [
+        0,
+        10224
+      ]
+    },
+    {
+      "shot_no": 4,
+      "artifact_id": "tdms:4:water:9d5f564bcd7c",
+      "source_role": "AUXILIARY",
+      "data_type": "WATER",
+      "channel_name": "140弯头T18回",
+      "process_id": "ECRH:COOLING:TEMP_140_ELBOW_T18_RETURN",
+      "file_path": "/home/pl/java/data/TUBE/4/4_Water.tdms",
+      "sha256_hex": "9d5f564bcd7cd7a494fb4ac3f241eb437f8f88a1a8b43a54ed298b4220ef7e7d",
+      "sample_count": 10225,
+      "declared_sample_count": 1,
+      "sample_interval_seconds": 0.001,
+      "start_time": "2023-03-29T04:43:39.995270Z",
+      "end_time": "2023-03-29T04:43:50.219270Z",
+      "shot_range": [
+        0,
+        10224
+      ]
+    },
+    {
+      "shot_no": 4,
+      "artifact_id": "tdms:4:water:9d5f564bcd7c",
+      "source_role": "AUXILIARY",
+      "data_type": "WATER",
+      "channel_name": "140TAPER T19回",
+      "process_id": "ECRH:COOLING:TEMP_140_TAPER_T19_RETURN",
+      "file_path": "/home/pl/java/data/TUBE/4/4_Water.tdms",
+      "sha256_hex": "9d5f564bcd7cd7a494fb4ac3f241eb437f8f88a1a8b43a54ed298b4220ef7e7d",
+      "sample_count": 10225,
+      "declared_sample_count": 1,
+      "sample_interval_seconds": 0.001,
+      "start_time": "2023-03-29T04:43:39.995281Z",
+      "end_time": "2023-03-29T04:43:50.219281Z",
+      "shot_range": [
+        0,
+        10224
+      ]
+    },
+    {
+      "shot_no": 4,
+      "artifact_id": "tdms:4:water:9d5f564bcd7c",
+      "source_role": "AUXILIARY",
+      "data_type": "WATER",
+      "channel_name": "140金刚石窗T20回",
+      "process_id": "ECRH:COOLING:TEMP_140_DIAMOND_WINDOW_T20_RETURN",
+      "file_path": "/home/pl/java/data/TUBE/4/4_Water.tdms",
+      "sha256_hex": "9d5f564bcd7cd7a494fb4ac3f241eb437f8f88a1a8b43a54ed298b4220ef7e7d",
+      "sample_count": 10225,
+      "declared_sample_count": 1,
+      "sample_interval_seconds": 0.001,
+      "start_time": "2023-03-29T04:43:39.995292Z",
+      "end_time": "2023-03-29T04:43:50.219292Z",
+      "shot_range": [
+        0,
+        10224
+      ]
+    },
+    {
+      "shot_no": 4,
+      "artifact_id": "tdms:4:water:9d5f564bcd7c",
+      "source_role": "AUXILIARY",
+      "data_type": "WATER",
+      "channel_name": "140滤波器T21回",
+      "process_id": "ECRH:COOLING:TEMP_140_FILTER_T21_RETURN",
+      "file_path": "/home/pl/java/data/TUBE/4/4_Water.tdms",
+      "sha256_hex": "9d5f564bcd7cd7a494fb4ac3f241eb437f8f88a1a8b43a54ed298b4220ef7e7d",
+      "sample_count": 10225,
+      "declared_sample_count": 1,
+      "sample_interval_seconds": 0.001,
+      "start_time": "2023-03-29T04:43:39.995303Z",
+      "end_time": "2023-03-29T04:43:50.219303Z",
+      "shot_range": [
+        0,
+        10224
+      ]
+    },
+    {
+      "shot_no": 4,
+      "artifact_id": "tdms:4:water:9d5f564bcd7c",
+      "source_role": "AUXILIARY",
+      "data_type": "WATER",
+      "channel_name": "140滤波器T22回",
+      "process_id": "ECRH:COOLING:TEMP_140_FILTER_T22_RETURN",
+      "file_path": "/home/pl/java/data/TUBE/4/4_Water.tdms",
+      "sha256_hex": "9d5f564bcd7cd7a494fb4ac3f241eb437f8f88a1a8b43a54ed298b4220ef7e7d",
+      "sample_count": 10225,
+      "declared_sample_count": 1,
+      "sample_interval_seconds": 0.001,
+      "start_time": "2023-03-29T04:43:39.995314Z",
+      "end_time": "2023-03-29T04:43:50.219314Z",
+      "shot_range": [
+        0,
+        10224
+      ]
+    },
+    {
+      "shot_no": 4,
+      "artifact_id": "tdms:4:water:9d5f564bcd7c",
+      "source_role": "AUXILIARY",
+      "data_type": "WATER",
+      "channel_name": "140波导T23回",
+      "process_id": "ECRH:COOLING:TEMP_140_WAVEGUIDE_T23_RETURN",
+      "file_path": "/home/pl/java/data/TUBE/4/4_Water.tdms",
+      "sha256_hex": "9d5f564bcd7cd7a494fb4ac3f241eb437f8f88a1a8b43a54ed298b4220ef7e7d",
+      "sample_count": 10225,
+      "declared_sample_count": 1,
+      "sample_interval_seconds": 0.001,
+      "start_time": "2023-03-29T04:43:39.995325Z",
+      "end_time": "2023-03-29T04:43:50.219325Z",
+      "shot_range": [
+        0,
+        10224
+      ]
+    },
+    {
+      "shot_no": 4,
+      "artifact_id": "tdms:4:water:9d5f564bcd7c",
+      "source_role": "AUXILIARY",
+      "data_type": "WATER",
+      "channel_name": "140光栅1T24回",
+      "process_id": "ECRH:COOLING:TEMP_140_GRATING_1_T24_RETURN",
+      "file_path": "/home/pl/java/data/TUBE/4/4_Water.tdms",
+      "sha256_hex": "9d5f564bcd7cd7a494fb4ac3f241eb437f8f88a1a8b43a54ed298b4220ef7e7d",
+      "sample_count": 10225,
+      "declared_sample_count": 1,
+      "sample_interval_seconds": 0.001,
+      "start_time": "2023-03-29T04:43:39.995336Z",
+      "end_time": "2023-03-29T04:43:50.219336Z",
+      "shot_range": [
+        0,
+        10224
+      ]
+    },
+    {
+      "shot_no": 4,
+      "artifact_id": "tdms:4:water:9d5f564bcd7c",
+      "source_role": "AUXILIARY",
+      "data_type": "WATER",
+      "channel_name": "140光栅2T25回",
+      "process_id": "ECRH:COOLING:TEMP_140_GRATING_2_T25_RETURN",
+      "file_path": "/home/pl/java/data/TUBE/4/4_Water.tdms",
+      "sha256_hex": "9d5f564bcd7cd7a494fb4ac3f241eb437f8f88a1a8b43a54ed298b4220ef7e7d",
+      "sample_count": 10225,
+      "declared_sample_count": 1,
+      "sample_interval_seconds": 0.001,
+      "start_time": "2023-03-29T04:43:39.995347Z",
+      "end_time": "2023-03-29T04:43:50.219347Z",
+      "shot_range": [
+        0,
+        10224
+      ]
+    },
+    {
+      "shot_no": 4,
+      "artifact_id": "tdms:4:water:9d5f564bcd7c",
+      "source_role": "AUXILIARY",
+      "data_type": "WATER",
+      "channel_name": "140光栅3T26回",
+      "process_id": "ECRH:COOLING:TEMP_140_GRATING_3_T26_RETURN",
+      "file_path": "/home/pl/java/data/TUBE/4/4_Water.tdms",
+      "sha256_hex": "9d5f564bcd7cd7a494fb4ac3f241eb437f8f88a1a8b43a54ed298b4220ef7e7d",
+      "sample_count": 10225,
+      "declared_sample_count": 1,
+      "sample_interval_seconds": 0.001,
+      "start_time": "2023-03-29T04:43:39.995358Z",
+      "end_time": "2023-03-29T04:43:50.219358Z",
+      "shot_range": [
+        0,
+        10224
+      ]
+    },
+    {
+      "shot_no": 4,
+      "artifact_id": "tdms:4:water:9d5f564bcd7c",
+      "source_role": "AUXILIARY",
+      "data_type": "WATER",
+      "channel_name": "140负载1 T27回",
+      "process_id": "ECRH:COOLING:TEMP_140_LOAD_1_T27_RETURN",
+      "file_path": "/home/pl/java/data/TUBE/4/4_Water.tdms",
+      "sha256_hex": "9d5f564bcd7cd7a494fb4ac3f241eb437f8f88a1a8b43a54ed298b4220ef7e7d",
+      "sample_count": 10225,
+      "declared_sample_count": 1,
+      "sample_interval_seconds": 0.001,
+      "start_time": "2023-03-29T04:43:39.995369Z",
+      "end_time": "2023-03-29T04:43:50.219369Z",
+      "shot_range": [
+        0,
+        10224
+      ]
+    },
+    {
+      "shot_no": 4,
+      "artifact_id": "tdms:4:water:9d5f564bcd7c",
+      "source_role": "AUXILIARY",
+      "data_type": "WATER",
+      "channel_name": "140负载2 T28回",
+      "process_id": "ECRH:COOLING:TEMP_140_LOAD_2_T28_RETURN",
+      "file_path": "/home/pl/java/data/TUBE/4/4_Water.tdms",
+      "sha256_hex": "9d5f564bcd7cd7a494fb4ac3f241eb437f8f88a1a8b43a54ed298b4220ef7e7d",
+      "sample_count": 10225,
+      "declared_sample_count": 1,
+      "sample_interval_seconds": 0.001,
+      "start_time": "2023-03-29T04:43:39.995380Z",
+      "end_time": "2023-03-29T04:43:50.219380Z",
+      "shot_range": [
+        0,
+        10224
+      ]
+    },
+    {
+      "shot_no": 4,
+      "artifact_id": "tdms:4:water:9d5f564bcd7c",
+      "source_role": "AUXILIARY",
+      "data_type": "WATER",
+      "channel_name": "140负载3 T29回",
+      "process_id": "ECRH:COOLING:TEMP_140_LOAD_3_T29_RETURN",
+      "file_path": "/home/pl/java/data/TUBE/4/4_Water.tdms",
+      "sha256_hex": "9d5f564bcd7cd7a494fb4ac3f241eb437f8f88a1a8b43a54ed298b4220ef7e7d",
+      "sample_count": 10225,
+      "declared_sample_count": 1,
+      "sample_interval_seconds": 0.001,
+      "start_time": "2023-03-29T04:43:39.995391Z",
+      "end_time": "2023-03-29T04:43:50.219391Z",
+      "shot_range": [
+        0,
+        10224
+      ]
+    },
+    {
+      "shot_no": 4,
+      "artifact_id": "tdms:4:water:9d5f564bcd7c",
+      "source_role": "AUXILIARY",
+      "data_type": "WATER",
+      "channel_name": "140备用T30",
+      "process_id": "ECRH:COOLING:TEMP_140_SPARE_T30",
+      "file_path": "/home/pl/java/data/TUBE/4/4_Water.tdms",
+      "sha256_hex": "9d5f564bcd7cd7a494fb4ac3f241eb437f8f88a1a8b43a54ed298b4220ef7e7d",
+      "sample_count": 10225,
+      "declared_sample_count": 1,
+      "sample_interval_seconds": 0.001,
+      "start_time": "2023-03-29T04:43:39.995402Z",
+      "end_time": "2023-03-29T04:43:50.219402Z",
+      "shot_range": [
+        0,
+        10224
+      ]
+    }
+  ]
+}

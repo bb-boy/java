@@ -1,0 +1,49 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Waveform Ingest Request",
+  "type": "object",
+  "required": [
+    "shot_no",
+    "request_id",
+    "measurement",
+    "source_system",
+    "authority_level",
+    "signals"
+  ],
+  "properties": {
+    "shot_no": {"type": "integer"},
+    "request_id": {"type": "string"},
+    "measurement": {"type": "string"},
+    "source_system": {"type": "string"},
+    "authority_level": {"type": "string"},
+    "signals": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["shot_no", "artifact_id", "data_type", "channel_name", "process_id", "file_path"],
+        "properties": {
+          "shot_no": {"type": "integer"},
+          "artifact_id": {"type": "string"},
+          "source_role": {"type": "string"},
+          "data_type": {"type": "string"},
+          "channel_name": {"type": "string"},
+          "process_id": {"type": "string"},
+          "file_path": {"type": "string"},
+          "sample_count": {"type": "integer"},
+          "declared_sample_count": {"type": "integer"},
+          "sample_interval_seconds": {"type": "number"},
+          "start_time": {"type": "string", "format": "date-time"},
+          "end_time": {"type": "string", "format": "date-time"},
+          "shot_range": {
+            "type": "array",
+            "items": {"type": "integer"},
+            "minItems": 2,
+            "maxItems": 2
+          }
+        },
+        "additionalProperties": true
+      }
+    }
+  },
+  "additionalProperties": false
+}

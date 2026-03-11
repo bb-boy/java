@@ -1,65 +1,59 @@
 package com.example.kafka.config;
 
-// 导入Kafka的主题类
+import java.time.Duration;
+import java.util.Map;
 import org.apache.kafka.clients.admin.NewTopic;
-// 导入Spring的Bean注解
 import org.springframework.context.annotation.Bean;
-// 导入Spring的配置类注解
 import org.springframework.context.annotation.Configuration;
-// 导入Spring Kafka的主题构建器
 import org.springframework.kafka.config.TopicBuilder;
+import org.springframework.kafka.core.KafkaAdmin;
 
-/**
- * Kafka配置类
- * 
- * 这个类负责配置Kafka相关的Bean，主要是创建Topic（主题）
- * Spring Boot启动时会自动执行这个配置，如果主题不存在则自动创建
- */
-@Configuration  // 标识这是一个Spring配置类，Spring会扫描并加载这个类中的@Bean方法
+@Configuration
 public class KafkaConfig {
-    
-    /**
-     * 创建并配置demo主题
-     * 
-     * 什么是Topic（主题）？
-     * - Topic是Kafka中消息的分类，类似于数据库中的表
-     * - 生产者发送消息到指定的Topic
-     * - 消费者订阅Topic来接收消息
-     * 
-     * 什么是分区（Partition）？
-     * - 一个Topic可以分为多个分区，提高并发处理能力
-     * - 每个分区是一个有序的消息队列
-     * - 相同Key的消息会发送到同一个分区，保证顺序性
-     * 
-     * 什么是副本（Replica）？
-     * - 每个分区可以有多个副本，提高数据可靠性
-     * - 副本分布在不同的Kafka节点上
-     * - 如果一个节点故障，其他副本仍然可以提供服务
-     * 
-     * @return NewTopic对象，Spring会自动在Kafka中创建这个主题
-     */
-    @Bean  // @Bean注解告诉Spring：这个方法返回的对象需要被Spring管理
-           // Spring启动时会调用这个方法，并将返回的NewTopic注册到Kafka
-    public NewTopic demoTopic() {
-        // 使用TopicBuilder构建一个新的主题
-        return TopicBuilder
-                .name("demo-topic")      // 主题名称：demo-topic
-                .partitions(3)           // 分区数：3个分区
-                                         // 为什么是3个？因为我们有3个Kafka节点，
-                                         // 每个节点可以处理一个分区，提高并发能力
-                .replicas(3)             // 副本数：每个分区有3个副本
-                                         // 副本会分布在3个不同的Kafka节点上
-                                         // 即使2个节点挂掉，数据也不会丢失
-                .build();                // 构建并返回NewTopic对象
+    private static final int DEFAULT_PARTITION_COUNT = 3;
+    private static final int DEFAULT_REPLICA_COUNT = 3;
+    private static final String CLEANUP_POLICY_CONFIG = "cleanup.policy";
+    private static final String RETENTION_MS_CONFIG = "retention.ms";
+    private static final String POLICY_COMPACT = "compact";
+    private static final String POLICY_DELETE = "delete";
+    private static final Duration DELETE_RETENTION = Duration.ofDays(7);
+
+    @Bean
+    public KafkaAdmin.NewTopics ecrhTopics() {
+        return new KafkaAdmin.NewTopics(
+            buildCompactTopic(TopicNames.TDMS_ARTIFACT),
+            buildCompactTopic(TopicNames.SHOT_META),
+            buildCompactTopic(TopicNames.SIGNAL_CATALOG),
+            buildCompactTopic(TopicNames.DICT_PROTECTION_TYPE),
+            buildCompactTopic(TopicNames.DICT_OPERATION_MODE),
+            buildCompactTopic(TopicNames.DICT_OPERATION_TASK),
+            buildCompactTopic(TopicNames.DICT_OPERATION_TYPE),
+            buildDeleteTopic(TopicNames.EVENT_OPERATION),
+            buildDeleteTopic(TopicNames.EVENT_PROTECTION),
+            buildDeleteTopic(TopicNames.WAVEFORM_INGEST_REQUEST),
+            buildDeleteTopic(TopicNames.WAVEFORM_CHANNEL_BATCH),
+            buildDeleteTopic(TopicNames.PIPELINE_DLQ)
+        );
     }
-    
-    /*
-     * 执行流程：
-     * 1. Spring Boot启动时扫描到这个配置类
-     * 2. 执行demoTopic()方法，获取NewTopic对象
-     * 3. Spring Kafka自动连接到Kafka集群（使用application.yml中的配置）
-     * 4. 检查"demo-topic"是否存在
-     * 5. 如果不存在，则在Kafka中创建这个主题
-     * 6. 如果已存在，则跳过创建步骤
-     */
+
+    private NewTopic buildCompactTopic(String name) {
+        return buildTopic(name, Map.of(CLEANUP_POLICY_CONFIG, POLICY_COMPACT));
+    }
+
+    private NewTopic buildDeleteTopic(String name) {
+        String retentionMs = String.valueOf(DELETE_RETENTION.toMillis());
+        Map<String, String> config = Map.of(
+            CLEANUP_POLICY_CONFIG, POLICY_DELETE,
+            RETENTION_MS_CONFIG, retentionMs
+        );
+        return buildTopic(name, config);
+    }
+
+    private NewTopic buildTopic(String name, Map<String, String> config) {
+        return TopicBuilder.name(name)
+            .partitions(DEFAULT_PARTITION_COUNT)
+            .replicas(DEFAULT_REPLICA_COUNT)
+            .configs(config)
+            .build();
+    }
 }

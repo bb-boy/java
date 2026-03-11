@@ -1,0 +1,24 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Pipeline DLQ",
+  "type": "object",
+  "required": [
+    "failed_topic",
+    "failed_partition",
+    "failed_offset",
+    "error_type",
+    "error_message",
+    "raw_payload_json",
+    "retryable"
+  ],
+  "properties": {
+    "failed_topic": {"type": "string"},
+    "failed_partition": {"type": "integer"},
+    "failed_offset": {"type": "integer"},
+    "error_type": {"type": "string"},
+    "error_message": {"type": "string"},
+    "raw_payload_json": {"type": "string"},
+    "retryable": {"type": "boolean"}
+  },
+  "additionalProperties": false
+}

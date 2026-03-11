@@ -52,12 +52,6 @@
             <artifactId>spring-boot-starter-json</artifactId>
         </dependency>
 
-        <!-- WebSocket支持 -->
-        <dependency>
-            <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-starter-websocket</artifactId>
-        </dependency>
-
         <!-- FFT / 数学计算 -->
         <dependency>
             <groupId>org.apache.commons</groupId>

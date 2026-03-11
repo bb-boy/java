@@ -1,0 +1,11 @@
+DROP TABLE IF EXISTS waveform_samples;
+DROP TABLE IF EXISTS waveform_metadata;
+DROP TABLE IF EXISTS wave_data;
+DROP TABLE IF EXISTS protection_events;
+DROP TABLE IF EXISTS plc_interlock;
+DROP TABLE IF EXISTS operation_log;
+DROP TABLE IF EXISTS shot_metadata;
+DROP TABLE IF EXISTS channels;
+DROP TABLE IF EXISTS ingest_errors;
+DROP TABLE IF EXISTS system_config;
+DROP TABLE IF EXISTS users;

@@ -1,0 +1,17 @@
+{
+  "shot_no": 176,
+  "shot_start_time": "2024-11-27T08:05:31.319584Z",
+  "shot_end_time": "2024-11-27T08:05:31.394484Z",
+  "expected_duration_seconds": 0.005,
+  "actual_duration_seconds": 0.0749,
+  "status_code": "COMPLETE",
+  "status_reason": "actual duration is within expected tolerance",
+  "reference_channels": [
+    "NegVoltage",
+    "PosVoltage"
+  ],
+  "window_source": "tube_active_window",
+  "quality_flags": [],
+  "source_system": "TDMS_DERIVED",
+  "authority_level": "PROVISIONAL"
+}
