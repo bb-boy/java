@@ -1,33 +1,29 @@
-# Kafka Schema 参考
+# 🧾 Kafka Schema 参考
 
-## 概览
+## 🧭 概览
 
-系统使用 12 个 Kafka Topic，所有消息均遵循 JSON Schema (draft-07) 定义。Schema 文件位于 `schemas/kafka/` 目录。
+系统使用 12 个 Kafka Topic，所有消息遵循 JSON Schema (draft‑07) 定义。Schema 文件位于 `schemas/kafka/`。
 
-| Schema 文件 | 标题 | 说明 |
-|-------------|------|------|
-| `ecrh.shot.meta.v1.json` | Shot Meta | 炮元数据（时间线、状态） |
-| `ecrh.tdms.artifact.v1.json` | TDMS Artifact | TDMS 文件登记信息 |
-| `ecrh.signal.catalog.v1.json` | Signal Catalog | 信号/通道元数据目录 |
-| `ecrh.event.operation.v1.json` | Operation Event | 运行事件（设定值变化、爬坡） |
-| `ecrh.event.protection.v1.json` | Protection Event | 保护事件（异常、跳闸） |
-| `ecrh.waveform.ingest.request.v1.json` | Waveform Ingest Request | 波形入库请求 |
-| `ecrh.waveform.channel.batch.v1.json` | Waveform Channel Batch | 波形采样批次 |
-| `ecrh.pipeline.dlq.v1.json` | Pipeline DLQ | 死信队列 |
-| `ecrh.dict.operation_type.v1.json` | Operation Type Dict | 运行类型字典 |
-| `ecrh.dict.operation_mode.v1.json` | Operation Mode Dict | 运行模式字典 |
-| `ecrh.dict.operation_task.v1.json` | Operation Task Dict | 运行任务字典 |
-| `ecrh.dict.protection_type.v1.json` | Protection Type Dict | 保护类型字典 |
+| Schema 文件 | 对应 Topic | 说明 |
+|-------------|------------|------|
+| `ecrh.shot.meta.v1.json` | `ecrh.shot.meta.v1` | 炮元数据 |
+| `ecrh.tdms.artifact.v1.json` | `ecrh.tdms.artifact.v1` | TDMS 文件资产 |
+| `ecrh.signal.catalog.v1.json` | `ecrh.signal.catalog.v1` | 信号目录 |
+| `ecrh.event.operation.v1.json` | `ecrh.event.operation.v1` | 运行事件 |
+| `ecrh.event.protection.v1.json` | `ecrh.event.protection.v1` | 保护事件 |
+| `ecrh.waveform.ingest.request.v1.json` | `ecrh.waveform.ingest.request.v1` | 波形入库请求 |
+| `ecrh.waveform.channel.batch.v1.json` | `ecrh.waveform.channel.batch.v1` | 波形通道批次 |
+| `ecrh.pipeline.dlq.v1.json` | `ecrh.pipeline.dlq.v1` | 死信队列 |
+| `ecrh.dict.operation_type.v1.json` | `ecrh.dict.operation_type.v1` | 运行类型字典 |
+| `ecrh.dict.operation_mode.v1.json` | `ecrh.dict.operation_mode.v1` | 运行模式字典 |
+| `ecrh.dict.operation_task.v1.json` | `ecrh.dict.operation_task.v1` | 运行任务字典 |
+| `ecrh.dict.protection_type.v1.json` | `ecrh.dict.protection_type.v1` | 保护类型字典 |
 
----
+## 🧩 核心数据 Schema
 
-## 核心数据 Schema
+### 🧪 ecrh.shot.meta.v1
 
-### ecrh.shot.meta.v1
-
-炮元数据，包含实验时间线和状态。
-
-**必填字段:** `shot_no`
+✅ 必填字段：`shot_no`
 
 | 字段 | 类型 | 说明 |
 |------|------|------|
@@ -36,17 +32,13 @@
 | `shot_end_time` | string (date-time) | 实验结束时间 |
 | `expected_duration` | number | 预期持续时间（秒） |
 | `actual_duration` | number | 实际持续时间（秒） |
-| `status_code` | string | 状态码（SUCCESS / FAILED） |
-| `status_reason` | string | 状态原因说明 |
+| `status_code` | string | 状态码 |
+| `status_reason` | string | 状态原因 |
 | `artifact_id` | string | 关联的主 Artifact ID |
 
----
+### 📦 ecrh.tdms.artifact.v1
 
-### ecrh.tdms.artifact.v1
-
-TDMS 文件登记信息，标识数据来源文件。
-
-**必填字段:** `artifact_id`, `shot_no`, `data_type`, `file_path`, `sha256_hex`, `artifact_status`
+✅ 必填字段：`artifact_id`, `shot_no`, `data_type`, `file_path`, `sha256_hex`, `artifact_status`
 
 | 字段 | 类型 | 说明 |
 |------|------|------|
@@ -57,41 +49,33 @@ TDMS 文件登记信息，标识数据来源文件。
 | `file_name` | string | 原始文件名 |
 | `file_size_bytes` | integer | 文件大小（字节） |
 | `file_mtime` | string (date-time) | 文件最后修改时间 |
-| `sha256_hex` | string | SHA-256 校验和（十六进制） |
-| `artifact_status` | string | 处理状态（PARSED） |
+| `sha256_hex` | string | SHA‑256 校验和（十六进制） |
+| `artifact_status` | string | 处理状态 |
 
----
+### 📒 ecrh.signal.catalog.v1
 
-### ecrh.signal.catalog.v1
-
-信号通道元数据目录，描述每个物理通道的属性。
-
-**必填字段:** `source_system`, `source_name`, `data_type`, `process_id`
+✅ 必填字段：`source_system`, `source_name`, `data_type`, `process_id`
 
 | 字段 | 类型 | 说明 |
 |------|------|------|
 | `source_system` | string | 源系统标识 |
 | `source_type` | string | 源类型 |
 | `source_name` | string | 信号名称 |
-| `data_type` | string | 数据分类（TUBE / WATER） |
-| `process_id` | string | 过程标识（如 `ECRH:RF:IN_POWER`） |
+| `data_type` | string | 数据分类 |
+| `process_id` | string | 过程标识 |
 | `display_name` | string | 显示名称 |
 | `unit` | string | 计量单位 |
 | `value_type` | string | 值类型分类 |
-| `device_scope` | string | 产生信号的设备 |
-| `is_primary_waveform` | boolean | 是否为主波形信号 |
-| `is_primary_operation_signal` | boolean | 是否为主运行信号 |
-| `is_primary_protection_signal` | boolean | 是否为主保护信号 |
+| `device_scope` | string | 设备范围 |
+| `is_primary_waveform` | boolean | 是否主波形 |
+| `is_primary_operation_signal` | boolean | 是否主运行信号 |
+| `is_primary_protection_signal` | boolean | 是否主保护信号 |
 
----
+## 🧨 事件 Schema
 
-## 事件 Schema
+### ⚙️ ecrh.event.operation.v1
 
-### ecrh.event.operation.v1
-
-运行事件，记录设定值阶跃、功率爬坡等操作。
-
-**必填字段:** `source_system`, `shot_no`, `event_family`, `event_time`, `event_code`
+✅ 必填字段：`source_system`, `shot_no`, `event_family`, `event_time`, `event_code`
 
 | 字段 | 类型 | 说明 |
 |------|------|------|
@@ -112,7 +96,7 @@ TDMS 文件登记信息，标识数据来源文件。
 | `severity` | string | 严重程度 |
 | `dedup_key` | string | 去重键 |
 
-**details 嵌套对象:**
+🧩 details 子对象：
 
 | 字段 | 类型 | 说明 |
 |------|------|------|
@@ -123,40 +107,36 @@ TDMS 文件登记信息，标识数据来源文件。
 | `old_value` | number | 变更前值 |
 | `new_value` | number | 变更后值 |
 | `delta_value` | number | 变化量 |
-| `confidence` | number | 置信度分数 |
+| `confidence` | number | 置信度 |
 
-**事件代码:**
+🧾 事件代码示例：
 
 | 代码 | 说明 |
 |------|------|
 | `OP_SETPOINT_STEP` | 设定值阶跃检测 |
 | `OP_SETPOINT_RAMP` | 设定值爬坡检测 |
 
----
+### 🛡️ ecrh.event.protection.v1
 
-### ecrh.event.protection.v1
+✅ 必填字段：与运行事件相同。
 
-保护事件，记录异常检测和保护动作。
-
-**必填字段:** 与 Operation Event 相同。
-
-**details 嵌套对象:**
+🧩 details 子对象：
 
 | 字段 | 类型 | 说明 |
 |------|------|------|
 | `protection_type_code` | string | 保护类型代码 |
-| `protection_scope` | string | 保护范围（TUBE / HVPS / RF / COOLING） |
+| `protection_scope` | string | 保护范围 |
 | `trigger_condition` | string | 触发条件 |
 | `measured_value` | number | 测量值 |
 | `threshold_value` | number | 阈值 |
 | `threshold_op` | string | 比较运算符 |
-| `action_taken` | string | 采取动作（TRIP / SHUTDOWN / ALARM / NONE） |
+| `action_taken` | string | 采取动作 |
 | `window_start` | string (date-time) | 时间窗口起始 |
 | `window_end` | string (date-time) | 时间窗口结束 |
-| `related_channels` | array[string] | 关联通道列表 |
+| `related_channels` | array[string] | 关联通道 |
 | `evidence_score` | number | 证据分数 |
 
-**事件代码:**
+🧾 事件代码示例：
 
 | 代码 | 说明 |
 |------|------|
@@ -166,15 +146,11 @@ TDMS 文件登记信息，标识数据来源文件。
 | `PRX_RAPID_DROPOUT` | 快速跌落 |
 | `PRX_COOLING_ANOMALY` | 冷却异常 |
 
----
+## 🌊 波形 Schema
 
-## 波形 Schema
+### 📥 ecrh.waveform.ingest.request.v1
 
-### ecrh.waveform.ingest.request.v1
-
-波形入库请求，描述一次入库操作包含的所有信号。
-
-**必填字段:** `shot_no`, `request_id`, `measurement`, `source_system`, `authority_level`, `signals`
+✅ 必填字段：`shot_no`, `request_id`, `measurement`, `source_system`, `authority_level`, `signals`
 
 | 字段 | 类型 | 说明 |
 |------|------|------|
@@ -185,7 +161,7 @@ TDMS 文件登记信息，标识数据来源文件。
 | `authority_level` | string | 权限级别 |
 | `signals` | array[object] | 信号列表 |
 
-**signals 每项字段:**
+🧩 signals 子对象：
 
 | 字段 | 类型 | 说明 |
 |------|------|------|
@@ -195,21 +171,17 @@ TDMS 文件登记信息，标识数据来源文件。
 | `channel_name` | string | 通道名称 |
 | `process_id` | string | 过程标识 |
 | `file_path` | string | 源文件路径 |
-| `source_role` | string | 源角色（PRIMARY / AUXILIARY） |
+| `source_role` | string | 源角色 |
 | `sample_count` | integer | 采样点数 |
 | `declared_sample_count` | integer | 声明采样点数 |
 | `sample_interval_seconds` | number | 采样间隔（秒） |
 | `start_time` | string (date-time) | 起始时间 |
 | `end_time` | string (date-time) | 结束时间 |
-| `shot_range` | array[integer, 2] | 有效采样范围 [start_idx, end_idx] |
+| `shot_range` | array[integer, 2] | 有效采样范围 |
 
----
+### 📦 ecrh.waveform.channel.batch.v1
 
-### ecrh.waveform.channel.batch.v1
-
-波形采样批次，将通道数据分块传输。每块最多 4096 个采样点。
-
-**必填字段:** `artifact_id`, `shot_no`, `source_system`, `channel_name`, `process_id`, `sample_rate_hz`, `chunk_index`, `chunk_count`, `chunk_start_index`, `window_start`, `encoding`, `samples`
+✅ 必填字段：`artifact_id`, `shot_no`, `source_system`, `channel_name`, `process_id`, `sample_rate_hz`, `chunk_index`, `chunk_count`, `chunk_start_index`, `window_start`, `encoding`, `samples`
 
 | 字段 | 类型 | 说明 |
 |------|------|------|
@@ -225,18 +197,12 @@ TDMS 文件登记信息，标识数据来源文件。
 | `chunk_start_index` | integer | 本块起始采样索引 |
 | `window_start` | string (date-time) | 本批次时间窗口起始 |
 | `window_end` | string (date-time) | 本批次时间窗口结束 |
-| `encoding` | string | 编码格式（`raw`） |
+| `encoding` | string | 编码格式 |
 | `samples` | array[number] 或 string | 采样数据 |
 
----
+## 🚨 死信队列 Schema
 
-## 死信队列 Schema
-
-### ecrh.pipeline.dlq.v1
-
-消费失败的消息将路由到 DLQ Topic，用于故障排查。
-
-**必填字段:** 全部
+### 🧯 ecrh.pipeline.dlq.v1
 
 | 字段 | 类型 | 说明 |
 |------|------|------|
@@ -248,15 +214,9 @@ TDMS 文件登记信息，标识数据来源文件。
 | `raw_payload_json` | string | 原始消息 JSON 字符串 |
 | `retryable` | boolean | 是否可重试 |
 
----
+## 📚 字典 Schema（共性字段）
 
-## 字典 Schema
-
-### ecrh.dict.operation_type.v1
-
-运行类型字典，定义系统中所有运行操作类型。
-
-**必填字段:** `operation_type_code`, `requires_old_new`, `requires_task_code`, `requires_mode_code`, `is_active`
+字典类主题都以 `*_code` 作为 key，并包含 `is_active` 等状态字段。各 Schema 的完整字段以对应 JSON Schema 为准。
 
 | 字段 | 类型 | 说明 |
 |------|------|------|

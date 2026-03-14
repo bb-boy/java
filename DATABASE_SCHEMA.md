@@ -1,17 +1,16 @@
-# 数据库设计 — MySQL + InfluxDB
+# 🗄️ 数据库设计 — MySQL + InfluxDB
 
-## 概述
+## 🎯 目标与边界
 
-系统采用双存储架构：
-
-- **MySQL 8.0**：存储结构化元数据、事件、字典、信号目录。所有数据由 Kafka 消费者投影写入。
-- **InfluxDB 2.7**：存储高频时序波形数据。由 `WaveformInfluxWriter` 批量写入。
+- 🧾 MySQL 负责结构化元数据、事件与字典
+- 🌊 InfluxDB 负责高频波形
+- 🛰️ 所有数据由 Kafka 消费者投影写入
 
 DDL 位于 `sql/ecrh_schema.sql`，旧表清理 DDL 位于 `sql/ecrh_drop_legacy.sql`。
 
-## MySQL 表结构
+## 🧱 MySQL 结构总览
 
-### 分层设计
+### 🧭 分层模型
 
 ```
 字典层 (Dict)
@@ -27,9 +26,9 @@ DDL 位于 `sql/ecrh_schema.sql`，旧表清理 DDL 位于 `sql/ecrh_drop_legacy
   └── shots / events / event_operation_detail / event_protection_detail
 ```
 
-### 字典层（4 张表）
+### 📚 字典层（4 张表）
 
-#### protection_type_dict — 保护类型字典
+#### 🛡️ protection_type_dict
 
 | 列 | 类型 | 约束 | 说明 |
 |----|------|------|------|
@@ -44,7 +43,7 @@ DDL 位于 `sql/ecrh_schema.sql`，旧表清理 DDL 位于 `sql/ecrh_drop_legacy
 | `authority_default` | VARCHAR(32) | | 默认权限级别 |
 | `is_active` | BOOLEAN | NOT NULL, DEFAULT TRUE | 是否启用 |
 
-#### operation_mode_dict — 操作模式字典
+#### 🧭 operation_mode_dict
 
 | 列 | 类型 | 约束 | 说明 |
 |----|------|------|------|
@@ -53,7 +52,7 @@ DDL 位于 `sql/ecrh_schema.sql`，旧表清理 DDL 位于 `sql/ecrh_drop_legacy
 | `scope_note` | VARCHAR(255) | | 范围说明 |
 | `is_active` | BOOLEAN | NOT NULL, DEFAULT TRUE | 是否启用 |
 
-#### operation_task_dict — 操作任务字典
+#### 🧩 operation_task_dict
 
 | 列 | 类型 | 约束 | 说明 |
 |----|------|------|------|
@@ -65,7 +64,7 @@ DDL 位于 `sql/ecrh_schema.sql`，旧表清理 DDL 位于 `sql/ecrh_drop_legacy
 | `allowed_mode_hint` | VARCHAR(255) | | 允许的模式提示 |
 | `is_active` | BOOLEAN | NOT NULL, DEFAULT TRUE | 是否启用 |
 
-#### operation_type_dict — 操作类型字典
+#### 🧪 operation_type_dict
 
 | 列 | 类型 | 约束 | 说明 |
 |----|------|------|------|
@@ -78,17 +77,15 @@ DDL 位于 `sql/ecrh_schema.sql`，旧表清理 DDL 位于 `sql/ecrh_drop_legacy
 | `requires_mode_code` | BOOLEAN | NOT NULL, DEFAULT FALSE | 是否需要模式编码 |
 | `is_active` | BOOLEAN | NOT NULL, DEFAULT TRUE | 是否启用 |
 
-### 来源层（2 张表）
+### 🧾 来源层（2 张表）
 
-#### tdms_artifacts — TDMS 文件资产
-
-跟踪每个 TDMS 文件的导入状态。以 SHA256 哈希去重。
+#### 📦 tdms_artifacts
 
 | 列 | 类型 | 约束 | 说明 |
 |----|------|------|------|
 | `artifact_id` | VARCHAR(64) | PK | 资产 ID |
 | `shot_no` | INT | NOT NULL | 炮号 |
-| `data_type` | VARCHAR(32) | NOT NULL | 数据类型 (TUBE / WATER) |
+| `data_type` | VARCHAR(32) | NOT NULL | 数据类型 |
 | `file_path` | VARCHAR(512) | NOT NULL | 文件路径 |
 | `file_name` | VARCHAR(255) | | 文件名 |
 | `file_size_bytes` | BIGINT | | 文件大小 |
@@ -99,9 +96,7 @@ DDL 位于 `sql/ecrh_schema.sql`，旧表清理 DDL 位于 `sql/ecrh_drop_legacy
 | `created_at` | DATETIME(3) | NOT NULL | 创建时间 |
 | `updated_at` | DATETIME(3) | NOT NULL | 更新时间 |
 
-#### source_records — Kafka 消费收据
-
-记录每条已消费的 Kafka 消息，按 topic + partition + offset 唯一约束实现幂等。
+#### 🧾 source_records
 
 | 列 | 类型 | 约束 | 说明 |
 |----|------|------|------|
@@ -119,17 +114,15 @@ DDL 位于 `sql/ecrh_schema.sql`，旧表清理 DDL 位于 `sql/ecrh_drop_legacy
 | `ingest_status` | VARCHAR(32) | NOT NULL | 处理状态 |
 | `raw_payload_json` | JSON | | 原始载荷 |
 
-**唯一约束**：`(topic_name, partition_id, offset_value)`
+唯一约束：`(topic_name, partition_id, offset_value)`。
 
-### 目录层（2 张表）
+### 🗂️ 目录层（2 张表）
 
-#### signal_catalog — 信号目录
-
-定义系统中所有信号的标准元数据。
+#### 📒 signal_catalog
 
 | 列 | 类型 | 约束 | 说明 |
 |----|------|------|------|
-| `process_id` | VARCHAR(128) | PK | 处理流 ID（全局唯一标识）|
+| `process_id` | VARCHAR(128) | PK | 处理流 ID |
 | `display_name` | VARCHAR(255) | | 显示名 |
 | `signal_class` | VARCHAR(64) | | 信号类别 |
 | `unit` | VARCHAR(32) | | 单位 |
@@ -137,44 +130,40 @@ DDL 位于 `sql/ecrh_schema.sql`，旧表清理 DDL 位于 `sql/ecrh_drop_legacy
 | `device_scope` | VARCHAR(64) | | 设备范围 |
 | `is_key_signal` | BOOLEAN | NOT NULL, DEFAULT FALSE | 是否关键信号 |
 
-#### signal_source_map — 信号来源映射
-
-将原始通道名映射到标准 `process_id`。
+#### 🧭 signal_source_map
 
 | 列 | 类型 | 约束 | 说明 |
 |----|------|------|------|
 | `map_id` | BIGINT | PK, AUTO_INCREMENT | 映射 ID |
 | `source_system` | VARCHAR(64) | NOT NULL | 来源系统 |
 | `source_type` | VARCHAR(64) | | 来源类型 |
-| `source_name` | VARCHAR(128) | NOT NULL | 通道名（原始名）|
-| `process_id` | VARCHAR(128) | NOT NULL | 对应的处理流 ID |
-| `data_type` | VARCHAR(32) | | 数据类型 (TUBE / WATER) |
-| `is_primary_waveform` | BOOLEAN | NOT NULL, DEFAULT FALSE | 是否主波形信号 |
-| `is_primary_operation_signal` | BOOLEAN | NOT NULL, DEFAULT FALSE | 是否主操作信号 |
-| `is_primary_protection_signal` | BOOLEAN | NOT NULL, DEFAULT FALSE | 是否主保护信号 |
+| `source_name` | VARCHAR(128) | NOT NULL | 通道名 |
+| `process_id` | VARCHAR(128) | NOT NULL | 处理流 ID |
+| `data_type` | VARCHAR(32) | | 数据类型 |
+| `is_primary_waveform` | BOOLEAN | NOT NULL, DEFAULT FALSE | 是否主波形 |
+| `is_primary_operation_signal` | BOOLEAN | NOT NULL, DEFAULT FALSE | 是否主操作 |
+| `is_primary_protection_signal` | BOOLEAN | NOT NULL, DEFAULT FALSE | 是否主保护 |
 | `is_active` | BOOLEAN | NOT NULL, DEFAULT TRUE | 是否启用 |
 
-**唯一约束**：`(source_system, source_type, source_name, data_type)`
+唯一约束：`(source_system, source_type, source_name, data_type)`。
 
-### 事实层（3 张表）
+### 📌 事实层（3 张表）
 
-#### shots — 炮号元数据
+#### 🎯 shots
 
 | 列 | 类型 | 约束 | 说明 |
 |----|------|------|------|
 | `shot_no` | INT | PK | 炮号 |
 | `shot_start_time` | DATETIME(3) | | 起始时间 |
 | `shot_end_time` | DATETIME(3) | | 结束时间 |
-| `expected_duration` | DOUBLE | | 预期时长（秒）|
-| `actual_duration` | DOUBLE | | 实际时长（秒）|
-| `status_code` | VARCHAR(32) | | 状态码 (COMPLETE 等) |
+| `expected_duration` | DOUBLE | | 预期时长（秒） |
+| `actual_duration` | DOUBLE | | 实际时长（秒） |
+| `status_code` | VARCHAR(32) | | 状态码 |
 | `status_reason` | VARCHAR(255) | | 状态原因 |
 | `created_at` | DATETIME(3) | NOT NULL | 创建时间 |
 | `updated_at` | DATETIME(3) | NOT NULL | 更新时间 |
 
-#### events — 统一事件总表
-
-所有事件（操作 + 保护）统一存储，通过 `event_family` 区分类型。
+#### 🧨 events
 
 | 列 | 类型 | 约束 | 说明 |
 |----|------|------|------|
@@ -182,10 +171,10 @@ DDL 位于 `sql/ecrh_schema.sql`，旧表清理 DDL 位于 `sql/ecrh_drop_legacy
 | `shot_no` | INT | NOT NULL | 炮号 |
 | `source_record_id` | BIGINT | | 关联 source_records |
 | `artifact_id` | VARCHAR(64) | | 关联资产 ID |
-| `event_family` | VARCHAR(32) | NOT NULL | 事件族：`OPERATION` 或 `PROTECTION` |
+| `event_family` | VARCHAR(32) | NOT NULL | `OPERATION` / `PROTECTION` |
 | `event_code` | VARCHAR(64) | | 事件编码 |
 | `event_name` | VARCHAR(255) | | 事件名称 |
-| `event_time` | DATETIME(3) | NOT NULL | 事件发生时间 |
+| `event_time` | DATETIME(3) | NOT NULL | 事件时间 |
 | `process_id` | VARCHAR(128) | | 处理流 ID |
 | `message_text` | TEXT | | 事件消息 |
 | `message_level` | VARCHAR(32) | | 消息级别 |
@@ -198,13 +187,14 @@ DDL 位于 `sql/ecrh_schema.sql`，旧表清理 DDL 位于 `sql/ecrh_drop_legacy
 | `raw_payload_json` | JSON | | 原始载荷 |
 | `created_at` | DATETIME(3) | NOT NULL | 创建时间 |
 
-**索引**：
-- `idx_events_shot_time(shot_no, event_time)` — 按炮号+时间查询
-- `idx_events_family_time(event_family, event_time)` — 按类型+时间查询
+索引：
 
-**去重键格式**：`sourceSystem|eventFamily|eventCode|shotNo|eventTime|processId|entityId`
+- `idx_events_shot_time(shot_no, event_time)`
+- `idx_events_family_time(event_family, event_time)`
 
-#### event_operation_detail — 操作事件明细
+去重键格式：`sourceSystem|eventFamily|eventCode|shotNo|eventTime|processId|entityId`。
+
+#### 🧰 event_operation_detail
 
 | 列 | 类型 | 约束 | 说明 |
 |----|------|------|------|
@@ -222,7 +212,7 @@ DDL 位于 `sql/ecrh_schema.sql`，旧表清理 DDL 位于 `sql/ecrh_drop_legacy
 | `execution_status` | VARCHAR(32) | | 执行状态 |
 | `confidence` | DOUBLE | | 置信度 |
 
-#### event_protection_detail — 保护事件明细
+#### 🛡️ event_protection_detail
 
 | 列 | 类型 | 约束 | 说明 |
 |----|------|------|------|
@@ -232,20 +222,20 @@ DDL 位于 `sql/ecrh_schema.sql`，旧表清理 DDL 位于 `sql/ecrh_drop_legacy
 | `trigger_condition` | VARCHAR(255) | | 触发条件 |
 | `measured_value` | DOUBLE | | 测量值 |
 | `threshold_value` | DOUBLE | | 阈值 |
-| `threshold_op` | VARCHAR(16) | | 阈值运算符（`>`、`<` 等）|
-| `action_taken` | VARCHAR(128) | | 采取的动作 |
-| `action_latency_us` | BIGINT | | 动作延迟（微秒）|
+| `threshold_op` | VARCHAR(16) | | 阈值运算符 |
+| `action_taken` | VARCHAR(128) | | 采取动作 |
+| `action_latency_us` | BIGINT | | 动作延迟（微秒） |
 | `window_start` | DATETIME(3) | | 事件窗口起始 |
 | `window_end` | DATETIME(3) | | 事件窗口结束 |
-| `related_channels` | JSON | | 关联通道列表 |
+| `related_channels` | JSON | | 关联通道 |
 | `evidence_score` | DOUBLE | | 证据分数 |
 | `ack_state` | VARCHAR(32) | | 确认状态 |
 | `ack_user_id` | VARCHAR(64) | | 确认用户 |
 | `ack_time` | DATETIME(3) | | 确认时间 |
 
-## InfluxDB 数据模型
+## 📈 InfluxDB 数据模型
 
-### 连接信息
+### 🔐 默认连接信息（见 application.yml）
 
 | 参数 | 值 |
 |------|-----|
@@ -254,37 +244,34 @@ DDL 位于 `sql/ecrh_schema.sql`，旧表清理 DDL 位于 `sql/ecrh_drop_legacy
 | Bucket | `waveforms` |
 | Token | `my-super-secret-token` |
 
-### Measurement: `waveform`
+### 📌 Measurement: `waveform`
 
-| 维度 | 名称 | 类型 | 说明 |
-|------|------|------|------|
-| Tag | `shot_no` | string | 炮号 |
-| Tag | `channel_name` | string | 通道名（原始中文名）|
-| Tag | `data_type` | string | `TUBE` 或 `WATER` |
-| Tag | `source_system` | string | 来源系统（`ECRH`）|
-| Tag | `process_id` | string | 信号处理流 ID |
-| Tag | `artifact_id` | string | 源文件资产 ID |
-| Field | `value` | float64 | 采样值 |
-| Field | `sample_index` | int64 | 采样点在 chunk 内的索引 |
+| 类型 | 名称 | 说明 |
+|------|------|------|
+| Tag | `shot_no` | 炮号 |
+| Tag | `channel_name` | 通道名 |
+| Tag | `data_type` | `TUBE` / `WATER` |
+| Tag | `source_system` | 来源系统 |
+| Tag | `process_id` | 处理流 ID |
+| Tag | `artifact_id` | 资产 ID |
+| Field | `value` | 采样值 |
+| Field | `sample_index` | 采样点索引 |
 
-### 写入策略
+### ✍️ 写入策略
 
-- 每通道按 **4096 点**一个 chunk 分块
-- `WaveformInfluxWriter` 累积 **5000 个 Point** 后执行一次 flush
-- 时间精度：**nanosecond**
-- 写入模式：批量非阻塞
+- 📦 每通道按 4096 点分块
+- ⏱️ 5000 个 Point 触发一次 flush
+- ⚡ 时间精度为纳秒
 
-### 查询示例 (Flux)
+### 🔎 查询示例 (Flux)
 
 ```flux
-// 查询某炮号某通道的波形
 from(bucket: "waveforms")
   |> range(start: 2024-11-27T08:05:31Z, stop: 2024-11-27T08:05:32Z)
   |> filter(fn: (r) => r._measurement == "waveform" and r._field == "value")
   |> filter(fn: (r) => r.shot_no == "176" and r.channel_name == "InPower1")
   |> limit(n: 50000)
 
-// 查询某炮号可用通道
 from(bucket: "waveforms")
   |> range(start: 0)
   |> filter(fn: (r) => r._measurement == "waveform" and r.shot_no == "176" and r.data_type == "WATER")

@@ -1,8 +1,8 @@
-# Docker 部署指南
+# 🐳 Docker 部署指南
 
-## 服务概览
+## 🧭 服务概览
 
-`docker/docker-compose.yml` 定义了以下 5 个服务：
+`docker/docker-compose.yml` 定义了以下服务：
 
 | 服务 | 镜像 | 端口 | 说明 |
 |------|------|------|------|
@@ -13,59 +13,42 @@
 | influxdb | influxdb:2.7 | 8086 | 时序数据库 |
 | mysql | mysql:8.0 | 3306 | 关系型数据库 |
 
-所有服务共享 `kafka-network` 桥接网络。
+🧩 所有服务共享 `kafka-network` 桥接网络。
 
----
+## ✅ 前置条件
 
-## 环境配置
+- 🐳 Docker
+- 🧰 Docker Compose v2（命令为 `docker compose`）
 
-### 必需环境变量
+## 🔐 环境变量
 
-在 `docker/` 目录创建 `.env` 文件：
+Kafka KRaft 需要 `CLUSTER_ID`，MySQL 需要账号配置。推荐在 `docker/.env` 中维护：
 
 ```env
-CLUSTER_ID=MkU3OEVBNTcwNTJENDM2Qk
+CLUSTER_ID=REPLACE_WITH_UUID
 MYSQL_ROOT_PASSWORD=devroot
 MYSQL_DATABASE=wavedb
-MYSQL_USER=waveuser
-MYSQL_PASSWORD=wavepass
+MYSQL_USER=wavedb
+MYSQL_PASSWORD=wavedb123
 ```
 
-> `CLUSTER_ID` 是 Kafka KRaft 集群 ID，可通过 `kafka-storage random-uuid` 生成。
+`CLUSTER_ID` 可通过 `kafka-storage random-uuid` 生成。使用 `scripts/projectctl.sh` 启动时，会自动生成并缓存到 `run/cluster_id`。
 
----
-
-## 启动与停止
+## ▶️ 启动与停止
 
 ```bash
 cd docker
-
-# 启动所有服务
 docker compose up -d
-
-# 查看服务状态
 docker compose ps
-
-# 查看日志
 docker compose logs -f kafka1
 docker compose logs -f mysql
-
-# 停止所有服务
 docker compose down
-
-# 停止并清除数据卷
 docker compose down -v
 ```
 
-也可通过 `projectctl.sh` 统一管理（参见 scripts/README.md）。
+也可使用 `scripts/projectctl.sh` 统一管理（见 scripts/README.md）。
 
----
-
-## Kafka 集群（3 节点 KRaft）
-
-采用 KRaft 模式（无 ZooKeeper），3 节点同时担任 broker + controller。
-
-### 网络配置
+## 🛰️ Kafka 集群（3 节点 KRaft）
 
 | 节点 | Node ID | 内部通信 | 宿主机端口 | Controller 端口 |
 |------|---------|----------|-----------|----------------|
@@ -73,59 +56,35 @@ docker compose down -v
 | kafka2 | 2 | kafka2:29092 | localhost:29092 | kafka2:29093 |
 | kafka3 | 3 | kafka3:29092 | localhost:39092 | kafka3:29093 |
 
-监听器协议：
+🎧 监听器协议：
 
-- `PLAINTEXT_HOST`: 宿主机连接（`0.0.0.0:N9092`）
-- `PLAINTEXT`: 容器内部通信（`0.0.0.0:29092`）
-- `CONTROLLER`: KRaft 控制器通信（`0.0.0.0:29093`）
+| 协议 | 用途 |
+|------|------|
+| `PLAINTEXT_HOST` | 宿主机连接（`0.0.0.0:9092`） |
+| `PLAINTEXT` | 容器内通信（`0.0.0.0:29092`） |
+| `CONTROLLER` | KRaft 控制器通信（`0.0.0.0:29093`） |
 
-### 核心参数
+⚙️ 核心参数：
 
-| 参数 | 值 | 说明 |
-|------|-----|------|
-| `KAFKA_DEFAULT_REPLICATION_FACTOR` | 3 | 默认副本数 |
-| `KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR` | 3 | 偏移量 Topic 副本数 |
-| `KAFKA_MIN_INSYNC_REPLICAS` | 2 | 最少同步副本 |
-| `KAFKA_NUM_PARTITIONS` | 3 | 默认分区数 |
-| `KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR` | 3 | 事务日志副本数 |
-| `KAFKA_TRANSACTION_STATE_LOG_MIN_ISR` | 2 | 事务日志最少 ISR |
-| `KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS` | 0 | 消费者组初始再平衡延迟 |
+| 参数 | 值 |
+|------|-----|
+| `KAFKA_DEFAULT_REPLICATION_FACTOR` | 3 |
+| `KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR` | 3 |
+| `KAFKA_MIN_INSYNC_REPLICAS` | 2 |
+| `KAFKA_NUM_PARTITIONS` | 3 |
+| `KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR` | 3 |
+| `KAFKA_TRANSACTION_STATE_LOG_MIN_ISR` | 2 |
+| `KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS` | 0 |
 
-### 健康检查
-
-```yaml
-healthcheck:
-  test: kafka-broker-api-versions --bootstrap-server localhost:9092
-  interval: 30s
-  timeout: 10s
-  retries: 5
-  start_period: 60s
-```
-
-### 数据持久化
-
-| 卷 | 容器路径 | 说明 |
-|----|----------|------|
-| `./data/kafka1` | `/var/lib/kafka/data` | Broker 1 数据 |
-| `./data/kafka2` | `/var/lib/kafka/data` | Broker 2 数据 |
-| `./data/kafka3` | `/var/lib/kafka/data` | Broker 3 数据 |
-
----
-
-## Kafka UI
+## 🧭 Kafka UI
 
 | 项目 | 值 |
 |------|-----|
 | 访问地址 | http://localhost:18080 |
 | 集群名称 | `local-kraft-3nodes` |
 | Bootstrap Servers | `kafka1:29092,kafka2:29092,kafka3:29092` |
-| 动态配置 | 启用 (`DYNAMIC_CONFIG_ENABLED=true`) |
 
-依赖 kafka1、kafka2、kafka3 启动后才加载。
-
----
-
-## InfluxDB
+## 📈 InfluxDB
 
 | 项目 | 值 |
 |------|-----|
@@ -135,106 +94,40 @@ healthcheck:
 | Bucket | waveforms |
 | API Token | `my-super-secret-token` |
 
-### 数据持久化
+数据持久化卷：`influxdb-data` → `/var/lib/influxdb2`。
 
-| 卷 | 容器路径 |
-|----|----------|
-| `influxdb-data` (Docker named volume) | `/var/lib/influxdb2` |
-
-### 初始化
-
-首次启动时自动执行 setup 模式，创建 admin 用户、组织、bucket 和 token。
-
----
-
-## MySQL
+## 🗄️ MySQL
 
 | 项目 | 值 |
 |------|-----|
 | 访问地址 | localhost:3306 |
-| Root 密码 | 来自 `MYSQL_ROOT_PASSWORD` 环境变量 |
-| 默认数据库 | 来自 `MYSQL_DATABASE` 环境变量 |
-| 应用用户 | 来自 `MYSQL_USER` / `MYSQL_PASSWORD` |
+| Root 密码 | `MYSQL_ROOT_PASSWORD` |
+| 默认数据库 | `MYSQL_DATABASE` |
+| 应用用户 | `MYSQL_USER` / `MYSQL_PASSWORD` |
 
-### 健康检查
-
-```yaml
-healthcheck:
-  test: mysqladmin ping -h localhost
-  interval: 10s
-  timeout: 5s
-  retries: 10
-```
-
-### 数据持久化
-
-| 卷 | 容器路径 |
-|----|----------|
-| `mysql-data` (Docker named volume) | `/var/lib/mysql` |
-
-### 初始化 Schema
-
-启动 MySQL 后，执行 SQL 初始化脚本：
+🧱 初始化 Schema：
 
 ```bash
 mysql -h 127.0.0.1 -u root -p wavedb < sql/ecrh_schema.sql
 ```
 
----
+## 💾 数据持久化
 
-## 网络拓扑
+| 服务 | 卷 | 容器路径 |
+|------|----|----------|
+| kafka1 | ./data/kafka1 | /var/lib/kafka/data |
+| kafka2 | ./data/kafka2 | /var/lib/kafka/data |
+| kafka3 | ./data/kafka3 | /var/lib/kafka/data |
+| influxdb | influxdb-data | /var/lib/influxdb2 |
+| mysql | mysql-data | /var/lib/mysql |
 
-```
-┌─────────────────────────────────────────────────┐
-│                kafka-network (bridge)            │
-│                                                  │
-│  ┌─────────┐  ┌─────────┐  ┌─────────┐         │
-│  │ kafka1  │  │ kafka2  │  │ kafka3  │         │
-│  │ :19092  │  │ :29092  │  │ :39092  │         │
-│  └────┬────┘  └────┬────┘  └────┬────┘         │
-│       │            │            │                │
-│       └────────┬───┘────────────┘                │
-│                │                                  │
-│  ┌─────────┐  │  ┌──────────┐  ┌─────────┐     │
-│  │kafka-ui │  │  │ influxdb │  │  mysql  │     │
-│  │ :18080  │  │  │  :8086   │  │  :3306  │     │
-│  └─────────┘  │  └──────────┘  └─────────┘     │
-│                │                                  │
-└────────────────┼──────────────────────────────────┘
-                 │
-        ┌────────┴────────┐
-        │ Java 应用 :8080 │
-        │ (宿主机运行)     │
-        └─────────────────┘
-```
-
----
-
-## 常见操作
-
-### 查看 Topic 列表
+## 🛠️ 常见操作
 
 ```bash
 docker exec kafka1 kafka-topics --bootstrap-server kafka1:29092 --list
-```
-
-### 创建 Topic
-
-```bash
 docker exec kafka1 kafka-topics --bootstrap-server kafka1:29092 \
-  --create --topic ecrh.shot.meta \
-  --partitions 3 --replication-factor 3
-```
-
-### 查看消费者组
-
-```bash
+  --create --topic ecrh.shot.meta.v1 --partitions 3 --replication-factor 3
 docker exec kafka1 kafka-consumer-groups --bootstrap-server kafka1:29092 --list
-```
-
-### 重置消费偏移量
-
-```bash
 docker exec kafka1 kafka-consumer-groups --bootstrap-server kafka1:29092 \
-  --group ecrh-pipeline --reset-offsets --to-earliest --all-topics --execute
+  --group ecrh-projection-group --reset-offsets --to-earliest --all-topics --execute
 ```

@@ -1,215 +1,155 @@
-# 系统架构 — Kafka‑First TDMS Pipeline
+# 🧩 系统架构 — Kafka‑First TDMS Pipeline
 
-## 设计原则
+## 🎯 架构目标
 
-1. **TDMS 为唯一事实来源**：当前所有数据（元数据、操作事件、保护事件、波形）均从 TDMS 文件派生；未来可替换为真实系统直接产生的事件流
-2. **Kafka‑First**：任何写入 MySQL 或 InfluxDB 的数据，都必须先作为消息进入 Kafka；消费者从 Kafka 拉取后投影落库
-3. **幂等与可追溯**：每条 Kafka 消息记录到 `source_records` 表（topic + partition + offset 唯一约束）；事件通过 `dedup_key` 避免重复
-4. **DLQ 兜底**：任何消费失败自动转发到 `ecrh.pipeline.dlq.v1`，可重试或人工排查
+- ✅ 保证数据可追溯、可回放、可验证
+- 📊 让结构化事件与高频波形同时可查询
+- 🔗 通过 Kafka 形成可靠的数据事实链
 
-## 总体数据流
+## 🧱 关键约束
+
+- 📁 TDMS 是当前唯一事实来源
+- 🛰️ 所有写库动作必须经过 Kafka
+- 🧾 投影必须幂等且可追溯
+- 🚨 消费失败必须进入 DLQ
+
+## 🧪 端到端数据流
 
 ```
-┌─────────────────────────────────────────────────────────────────┐
-│  数据源层                                                        │
-│  TDMS 文件 (data/TUBE/{shotNo}/)                                 │
-└─────────────────┬───────────────────────────────────────────────┘
-                  │
-        Python 派生 (tdms_preprocessor.py)
-                  │
-                  ▼
-┌─────────────────────────────────────────────────────────────────┐
-│  派生层                                                          │
-│  data/derived/{shotNo}/                                          │
-│    artifact.json / shot_meta.json / signal_catalog.jsonl         │
-│    operation_events.jsonl / protection_events.jsonl              │
-│    waveform_ingest_request.json / waveform_channel_batch.jsonl   │
-└─────────────────┬───────────────────────────────────────────────┘
-                  │
-        POST /api/ingest/shot?shotNo=N
-        DerivedOutputReader → DerivedKafkaPublisher
-                  │
-                  ▼
-┌─────────────────────────────────────────────────────────────────┐
-│  消息层 — Kafka (12 个主题)                                       │
-│                                                                   │
-│  ┌──────────────┐  ┌──────────────┐  ┌──────────────────────┐   │
-│  │ 字典主题 (4)  │  │ 目录/资产 (3) │  │ 事件 (2)             │   │
-│  │ dict.*        │  │ artifact     │  │ event.operation      │   │
-│  │               │  │ shot.meta    │  │ event.protection     │   │
-│  │               │  │ signal.cat.. │  │                      │   │
-│  └──────┬───────┘  └──────┬───────┘  └──────────┬───────────┘   │
-│         │                 │                      │               │
-│  ┌──────────────────────┐  ┌─────────────────────────────┐      │
-│  │ 波形 (2)              │  │ DLQ (1)                     │      │
-│  │ waveform.ingest.req  │  │ pipeline.dlq.v1             │      │
-│  │ waveform.channel.bat │  │                             │      │
-│  └──────┬───────────────┘  └─────────────────────────────┘      │
-└─────────┼───────────────────────────────────────────────────────┘
-          │
-          ▼
-┌─────────────────────────────────────────────────────────────────┐
-│  投影层（消费者）                                                  │
-│                                                                   │
-│  ArtifactConsumer ──→ ArtifactProjectionService ──→ MySQL        │
-│    • tdms_artifacts (文件资产, SHA256 幂等)                        │
-│    • shots (炮号元数据, UPSERT)                                   │
-│    • signal_catalog + signal_source_map (信号目录与通道映射)       │
-│                                                                   │
-│  EventConsumer ──→ EventProjectionService ──→ MySQL              │
-│    • events (统一事件表, dedup_key 幂等)                          │
-│    • event_operation_detail / event_protection_detail             │
-│                                                                   │
-│  DictConsumer ──→ DictProjectionService ──→ MySQL                │
-│    • protection_type_dict / operation_mode_dict                   │
-│    • operation_task_dict / operation_type_dict                    │
-│                                                                   │
-│  WaveformConsumer ──→ WaveformProjectionService ──→ InfluxDB     │
-│    • 波形导入请求: 更新 artifact 的 waveform_ingest_status        │
-│    • 波形批次: WaveformInfluxWriter 按 5000 点 flush 写入        │
-│                                                                   │
-│  KafkaRecordProcessor (通用):                                     │
-│    • 创建 source_records (幂等追踪)                               │
-│    • 失败时发 DLQ                                                 │
-└─────────────────────────────────────────────────────────────────┘
-          │
-          ▼
-┌─────────────────────────────────────────────────────────────────┐
-│  查询层                                                          │
-│                                                                   │
-│  REST API (Spring Boot 8080)                                     │
-│    /api/shots           — 炮号列表                                │
-│    /api/events/*        — 操作/保护事件查询                        │
-│    /api/waveform        — InfluxDB 波形查询                       │
-│    /api/waveform/channels — 炮号可用通道                          │
-│    /api/ingest/shot     — 触发导入                                │
-│                                                                   │
-│  前端 (React 18 + ECharts 5)                                     │
-│    • 炮号选择器 + 元数据卡片                                      │
-│    • Tube / Water 通道切换                                        │
-│    • 波形图 + FFT 频谱 + DataZoom                                 │
-│    • 保护事件表 + 操作日志表 + 详情面板                            │
-└─────────────────────────────────────────────────────────────────┘
+数据源
+TDMS 文件 (data/TUBE/{shotNo}/)
+    │
+    ▼  Python 派生 (tools/tdms_preprocessor.py / data/watch_tdms.py)
+派生输出 (data/derived/{shotNo}/)
+    ├── artifact.json
+    ├── shot_meta.json
+    ├── signal_catalog.jsonl
+    ├── operation_events.jsonl
+    ├── protection_events.jsonl
+    ├── waveform_ingest_request.json
+    └── waveform_channel_batch.jsonl
+    │
+    ▼  POST /api/ingest/shot?shotNo=N
+Java 导入编排 → 发布到 Kafka
+    │
+    ▼  Kafka (12 主题)
+    │
+    ├── ArtifactConsumer → MySQL (资产/炮号/信号目录)
+    ├── EventConsumer    → MySQL (事件/明细)
+    ├── DictConsumer     → MySQL (4 张字典表)
+    └── WaveformConsumer → InfluxDB (波形)
+    │
+    ▼
+REST API → 前端可视化
 ```
 
-## Kafka 主题详细设计
+## 🧩 组件职责
 
-系统定义了 12 个 Kafka 主题，全部 3 分区、3 副本、min.insync.replicas=2。
+### 🐍 Python 派生层
 
-### 字典与目录（Compact 策略）
+- 🧪 解析 TDMS 文件，生成 7 类派生输出
+- 🔍 负责事件检测、波形分块与元数据构建
+- 📦 输出格式统一为 JSON/JSONL
 
-保留策略为 `compact`，保存每个 key 的最新值。
+### 🧾 Ingest API 与发布层
 
-| 主题 | 说明 | 消息 Key | 消费者 |
-|------|------|----------|--------|
-| `ecrh.dict.protection_type.v1` | 保护类型字典 | `protection_type_code` | DictConsumer |
-| `ecrh.dict.operation_mode.v1` | 操作模式字典 | `operation_mode_code` | DictConsumer |
-| `ecrh.dict.operation_task.v1` | 操作任务字典 | `operation_task_code` | DictConsumer |
-| `ecrh.dict.operation_type.v1` | 操作类型字典 | `operation_type_code` | DictConsumer |
-| `ecrh.tdms.artifact.v1` | TDMS 文件资产 | `sha256_hex` | ArtifactConsumer |
-| `ecrh.shot.meta.v1` | 炮号元数据 | `shot_no` | ArtifactConsumer |
-| `ecrh.signal.catalog.v1` | 信号目录与映射 | `source_system:source_name` | ArtifactConsumer |
+- 📤 `POST /api/ingest/shot` 读取派生目录并发布到 Kafka
+- 🧩 `DerivedOutputReader` 负责读取与组装
+- 🛰️ `DerivedKafkaPublisher` 负责按主题拆分与发送
 
-### 事件（Delete 策略，7 天保留）
+### 🛰️ Kafka 消息层
 
-| 主题 | 说明 | 消息 Key | 消费者 |
-|------|------|----------|--------|
-| `ecrh.event.operation.v1` | 操作事件 | `shot_no` | EventConsumer |
-| `ecrh.event.protection.v1` | 保护事件 | `shot_no` | EventConsumer |
+- 🧭 12 个主题覆盖字典、目录、事件、波形与 DLQ
+- 🧱 主题默认 3 分区、3 副本、`min.insync.replicas=2`
+- 🧹 字典与目录使用 compact，事件/波形使用 delete
 
-### 波形（Delete 策略，7 天保留）
+### 🧱 投影层（消费者）
 
-| 主题 | 说明 | 消息 Key | 消费者 |
-|------|------|----------|--------|
-| `ecrh.waveform.ingest.request.v1` | 波形导入请求 | `sha256_hex` | WaveformConsumer |
-| `ecrh.waveform.channel.batch.v1` | 波形通道批次 | `artifact_id:channel_name` | WaveformConsumer |
+- 🧾 `KafkaRecordProcessor` 统一处理幂等与 DLQ
+- 🗂️ `ArtifactConsumer` 写入 `tdms_artifacts`、`shots`、`signal_catalog`、`signal_source_map`
+- 📍 `EventConsumer` 写入 `events` 与事件明细表
+- 🧭 `DictConsumer` 写入 4 张字典表
+- 🌊 `WaveformConsumer` 写入 InfluxDB，并更新波形导入状态
 
-### DLQ
+### 🔍 查询层与前端
 
-| 主题 | 说明 | 消息 Key |
-|------|------|----------|
-| `ecrh.pipeline.dlq.v1` | 消费失败转储 | 原消息 key |
+- 📡 REST API：查询炮号、事件、波形、通道
+- 🎨 前端：波形绘图、事件表、FFT 频谱
 
-DLQ 消息包含：`failed_topic`、`failed_partition`、`failed_offset`、`error_type`、`error_message`、`raw_payload_json`、`retryable` 标志。
+## 📦 Kafka 主题设计
 
-## 消费者配置
+### 🗂️ 主题总览
 
-| 参数 | 值 | 说明 |
+| 主题 | 类型 | 保留策略 | Key | 消费者 |
+|------|------|---------|-----|--------|
+| `ecrh.dict.*.v1` | 字典 | compact | 各类 code | DictConsumer |
+| `ecrh.tdms.artifact.v1` | 资产 | compact | `sha256_hex` | ArtifactConsumer |
+| `ecrh.shot.meta.v1` | 炮号 | compact | `shot_no` | ArtifactConsumer |
+| `ecrh.signal.catalog.v1` | 信号目录 | compact | `source_system:source_name` | ArtifactConsumer |
+| `ecrh.event.operation.v1` | 运行事件 | delete | `shot_no` | EventConsumer |
+| `ecrh.event.protection.v1` | 保护事件 | delete | `shot_no` | EventConsumer |
+| `ecrh.waveform.ingest.request.v1` | 波形导入请求 | delete | `sha256_hex` | WaveformConsumer |
+| `ecrh.waveform.channel.batch.v1` | 波形通道批次 | delete | `artifact_id:channel_name` | WaveformConsumer |
+| `ecrh.pipeline.dlq.v1` | DLQ | delete | 原消息 key | 无 |
+
+DLQ 消息包含 `failed_topic`、`failed_partition`、`failed_offset`、`error_type`、`error_message`、`raw_payload_json`、`retryable` 等字段。
+
+## 🔁 幂等与一致性
+
+- 🧾 `source_records` 使用 `(topic_name, partition_id, offset_value)` 唯一约束
+- 🧷 `events` 使用 `dedup_key` 唯一约束
+- 🔗 通过 Kafka 强制“先消息、后落库”的一致性顺序
+
+## ⚙️ 消费者与生产者关键配置
+
+| 项目 | 值 | 说明 |
 |------|-----|------|
-| `group.id` | `ecrh-projection-group` | 全部消费者共享 |
-| `auto.offset.reset` | `earliest` | 新消费者组从头消费 |
-| ACK 模式 | manual | 确保处理完成后才提交 offset |
-| Producer `acks` | `all` | 确保消息写入所有同步副本 |
-| Producer 压缩 | `snappy` | 减少网络传输 |
-| Producer 重试 | `3` 次 | 自动重试 |
+| `group.id` | `ecrh-projection-group` | 所有投影消费者共享 |
+| `auto.offset.reset` | `earliest` | 新组从头消费 |
+| `ack-mode` | `manual` | 处理完成后再提交 offset |
+| Producer `acks` | `all` | 写入所有同步副本 |
+| Producer `compression` | `snappy` | 降低网络传输 |
+| Producer `retries` | `3` | 自动重试 |
 
-## InfluxDB 数据模型
+## 📈 InfluxDB 数据模型
 
 存储在 `waveforms` bucket 中，measurement 为 `waveform`。
 
-### Tags
+### 🏷️ Tags 与 Fields
 
-| Tag | 类型 | 说明 |
-|-----|------|------|
-| `shot_no` | string | 炮号 |
-| `channel_name` | string | 通道名（原始中文名）|
-| `data_type` | string | `TUBE` 或 `WATER` |
-| `source_system` | string | 来源系统（`ECRH`）|
-| `process_id` | string | 信号处理流 ID |
-| `artifact_id` | string | 源文件资产 ID |
+| 类型 | 名称 | 说明 |
+|------|------|------|
+| Tag | `shot_no` | 炮号 |
+| Tag | `channel_name` | 通道名 |
+| Tag | `data_type` | `TUBE` / `WATER` |
+| Tag | `source_system` | 来源系统 |
+| Tag | `process_id` | 处理流 ID |
+| Tag | `artifact_id` | 资产 ID |
+| Field | `value` | 采样值 |
+| Field | `sample_index` | 采样点索引 |
 
-### Fields
+### ✍️ 写入策略
 
-| Field | 类型 | 说明 |
-|-------|------|------|
-| `value` | float | 采样值 |
-| `sample_index` | int | 采样点索引 |
+- 📦 波形按通道分块，每块 4096 点
+- ⏱️ `WaveformInfluxWriter` 5000 点触发一次 flush
+- ⚡ 时间精度为纳秒，批量非阻塞写入
 
-### 写入策略
+## 🧭 代码模块与职责
 
-- 按通道分批，每 chunk 4096 个采样点
-- `WaveformInfluxWriter` 每 5000 个 Point 执行一次 flush
-- 时间精度：nanosecond
-- 写入模式：批量非阻塞
+| 包 | 职责 |
+|---|------|
+| `config` | Kafka 主题配置、InfluxDB 配置、主题名常量 |
+| `controller` | REST API |
+| `consumer` | Kafka 消费与通用处理器 |
+| `service` | 导入编排、投影写库、查询服务 |
+| `entity` | JPA 实体 |
+| `repository` | Spring Data JPA |
+| `model` | 请求/响应/内部模型 |
+| `producer` | Kafka 发布 |
+| `util` | 解析、校验、哈希、压缩等工具 |
 
-## Java 源码模块
+## 🎨 前端架构
 
-### 包结构（com.example.kafka）
-
-| 包 | 文件数 | 职责 |
-|---|--------|------|
-| `config` | 3 | Kafka 主题定义（`KafkaConfig`）、InfluxDB 连接（`InfluxDBConfig`）、主题名常量（`TopicNames`）|
-| `controller` | 4 | REST 端点：导入、事件查询、炮号查询、波形查询 |
-| `consumer` | 5 | Kafka 消费者 + 通用处理器 `KafkaRecordProcessor` |
-| `service` | 10 | 核心业务：导入编排、文件读取、Kafka 发布、投影写库、查询服务 |
-| `entity` | 12 | JPA 实体定义，映射 11 张 MySQL 表 |
-| `repository` | 12 | Spring Data JPA Repository 接口 |
-| `model` | 9 | 请求/响应/内部数据模型 |
-| `producer` | 1 | `KafkaMessagePublisher`（同步发送 + JSON 序列化）|
-| `util` | 8 | 工具类：payload 解析、校验、去重 key、哈希、压缩 |
-
-### 关键服务
-
-| 服务 | 职责 |
-|------|------|
-| `TdmsIngestService` | 导入编排：验证 shotNo → 读取派生文件 → 发布到 Kafka |
-| `DerivedOutputReader` | 从 `data/derived/{shotNo}/` 读取 7 个 JSON/JSONL 文件，组装 `DerivedPayload` |
-| `DerivedKafkaPublisher` | 将 `DerivedPayload` 拆分发送到相应 Kafka 主题（含主通道判断逻辑）|
-| `ArtifactProjectionService` | 从 Kafka 投影：资产 → `tdms_artifacts`；炮号 → `shots`；信号 → `signal_catalog` + `signal_source_map` |
-| `EventProjectionService` | 从 Kafka 投影：事件 → `events` + 操作/保护明细表（`dedup_key` 幂等）|
-| `WaveformProjectionService` | 从 Kafka 投影：波形请求更新 artifact 状态；波形批次解码后写 InfluxDB |
-| `WaveformInfluxWriter` | 构建 InfluxDB Point 并批量写入（5000 点 / 次 flush）|
-| `WaveformQueryService` | 构建 Flux 查询从 InfluxDB 读取波形序列和可用通道列表 |
-| `EventQueryService` | 从 MySQL 查询事件（支持 shotNo / 时间范围 / severity / processId / eventCode 过滤）|
-
-## 前端架构
-
-- **技术**：React 18（CDN，无构建步骤）+ Babel standalone + ECharts 5
-- **文件**：`src/main/resources/static/` 下的 `index.html`、`app.js`、`style.css`
-- **功能**：
-  - 炮号选择与元数据展示
-  - Tube / Water 通道切换（按炮号从 InfluxDB 动态加载通道列表）
-  - ECharts 波形绘图（支持 DataZoom 缩放）
-  - 客户端 FFT 频谱分析（Cooley-Tukey radix-2）
-  - 保护事件表 + 操作日志表 + 事件详情面板
-  - 事件点击跳转：自动定位事件前后 ±2s 的波形窗口
+- 🧰 技术栈：React 18 + Babel standalone + ECharts 5
+- 📁 入口目录：`src/main/resources/static/`
+- 🧩 主要能力：炮号选择、波形绘图、FFT 频谱、事件表与详情面板
