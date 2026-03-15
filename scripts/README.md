@@ -41,8 +41,23 @@ bash scripts/projectctl.sh <command> [options]
 - 🐳 `start` 会确保 Docker 运行并启动应用
 - 🧱 JAR 不存在时自动执行 `mvn clean package -DskipTests`
 - 🧾 Java 进程以后台方式启动，PID 记录在 `run/app.pid`
+- ✅ 应用启动后会轮询 `http://127.0.0.1:8080/`，只有首页可访问才判定为启动成功
+- ❌ `start` / `restart` / `rebuild` 任一步骤失败会立即退出，不再继续后续流程
 - 🔁 `restart` 与 `rebuild` 默认跳过 Docker（脚本内置行为）
-- 👀 `--watch` 会启动 `python3 data/watch_tdms.py --scan-now --api-url http://localhost:8080`
+- 👀 `--watch` 会启动 `python3 data/watch_tdms.py --scan-now --api-url http://127.0.0.1:8080`
+
+## ✅ 成功判定
+
+应用成功启动需要同时满足：
+
+- 脚本输出 `App started (PID xxx), logs: ...`
+- `curl -I http://127.0.0.1:8080/` 返回 `HTTP 200`
+- `bash scripts/projectctl.sh status` 显示 `App running: PID ...`
+
+如果带 `--watch`，还需要：
+
+- 脚本输出 `Watcher started (PID xxx)`
+- `bash scripts/projectctl.sh status` 显示 `Watcher running: PID ...`
 
 ## 🗂️ 日志与 PID
 
@@ -78,6 +93,7 @@ bash scripts/projectctl.sh start --skip-docker
 bash scripts/projectctl.sh stop --watch
 bash scripts/projectctl.sh rebuild
 bash scripts/projectctl.sh status
+curl -I http://127.0.0.1:8080/
 ```
 
 ## ❓ 常见问题

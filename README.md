@@ -89,6 +89,18 @@ java -jar target/kafka-demo-1.0.0.jar --spring.profiles.active=dev
 
 🌐 应用启动后访问 `http://localhost:8080` 进入前端。
 
+推荐用下面两条命令确认启动成功：
+
+```bash
+bash scripts/projectctl.sh status
+curl -I http://127.0.0.1:8080/
+```
+
+成功判定标准：
+
+- `bash scripts/projectctl.sh status` 显示 `App running: PID ...`
+- `curl -I http://127.0.0.1:8080/` 返回 `HTTP 200`
+
 ### 4. 🧪 派生与入库
 
 ```bash
@@ -103,7 +115,7 @@ curl -X POST "http://localhost:8080/api/ingest/shot?shotNo=1"
 
 ```bash
 # 文件监控 + 自动派生 + 自动入库
-python3 data/watch_tdms.py --scan-now --api-url http://localhost:8080
+python3 data/watch_tdms.py --scan-now --api-url http://127.0.0.1:8080
 
 # 或通过 projectctl 启动监控
 bash scripts/projectctl.sh start --watch

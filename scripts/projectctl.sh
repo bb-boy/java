@@ -28,10 +28,11 @@ KAFKA_DATA_DIRS=(
 )
 
 APP_PORT=8080
-APP_START_GRACE_SECONDS=8
+APP_START_TIMEOUT_SECONDS=30
 WATCHER_START_GRACE_SECONDS=2
 STOP_WAIT_SECONDS=10
 TAIL_LINES=50
+WATCHER_LOG_FILE="$LOG_DIR/watcher.log"
 
 mkdir -p "$LOG_DIR" "$RUN_DIR"
 
@@ -209,6 +210,39 @@ is_pid_running() {
   kill -0 "$pid" 2>/dev/null
 }
 
+start_background() {
+  local log_file="$1"
+  shift
+  : > "$log_file"
+  if command -v setsid &>/dev/null; then
+    setsid "$@" >>"$log_file" 2>&1 < /dev/null &
+  else
+    nohup "$@" >>"$log_file" 2>&1 < /dev/null &
+  fi
+  echo "$!"
+}
+
+wait_for_http_ready() {
+  local pid="$1"
+  local url="$2"
+  local timeout_seconds="$3"
+  local elapsed=0
+  if ! command -v curl &>/dev/null; then
+    return 0
+  fi
+  while [ "$elapsed" -lt "$timeout_seconds" ]; do
+    if ! is_pid_running "$pid"; then
+      return 1
+    fi
+    if curl -fsS --max-time 2 "$url" >/dev/null 2>&1; then
+      return 0
+    fi
+    sleep 1
+    elapsed=$((elapsed + 1))
+  done
+  return 1
+}
+
 tail_log() {
   local file="$1"
   if [ -f "$file" ]; then
@@ -284,13 +318,21 @@ start_app() {
   fi
   build_jar
   echo "Starting Java application..."
-  nohup java -jar "$JAR_FILE" --spring.profiles.active=dev > "$APP_LOG_FILE" 2>&1 &
-  local pid=$!
+  local pid
+  local ready_url="http://127.0.0.1:${APP_PORT}/"
+  pid="$(start_background "$APP_LOG_FILE" java -jar "$JAR_FILE" --spring.profiles.active=dev)"
   echo "$pid" > "$APP_PID_FILE"
-  sleep "$APP_START_GRACE_SECONDS"
+  sleep 1
   if ! is_pid_running "$pid"; then
     echo "App failed to start (PID $pid exited). Tail of log:"
     tail_log "$APP_LOG_FILE"
+    rm -f "$APP_PID_FILE"
+    return 1
+  fi
+  if ! wait_for_http_ready "$pid" "$ready_url" "$APP_START_TIMEOUT_SECONDS"; then
+    echo "App failed to become ready on $ready_url within ${APP_START_TIMEOUT_SECONDS}s. Tail of log:"
+    tail_log "$APP_LOG_FILE"
+    stop_pid "$pid" || true
     rm -f "$APP_PID_FILE"
     return 1
   fi
@@ -334,13 +376,14 @@ start_watcher() {
       echo "Watcher already running (PID $(cat "$WATCHER_PID_FILE"))"
     else
       echo "Starting TDMS watcher..."
-      nohup python3 "$ROOT_DIR/data/watch_tdms.py" > "$LOG_DIR/watcher.log" 2>&1 &
-      local pid=$!
+      local pid
+      local api_url="http://127.0.0.1:${APP_PORT}"
+      pid="$(start_background "$WATCHER_LOG_FILE" python3 "$ROOT_DIR/data/watch_tdms.py" --scan-now --api-url "$api_url")"
       echo "$pid" > "$WATCHER_PID_FILE"
       sleep "$WATCHER_START_GRACE_SECONDS"
       if ! is_pid_running "$pid"; then
         echo "Watcher failed to start (PID $pid exited). Tail of log:"
-        tail_log "$LOG_DIR/watcher.log"
+        tail_log "$WATCHER_LOG_FILE"
         rm -f "$WATCHER_PID_FILE"
         return 1
       fi
@@ -353,10 +396,11 @@ start_watcher() {
 
 stop_watcher() {
   if [ -f "$WATCHER_PID_FILE" ]; then
-    PID=$(cat "$WATCHER_PID_FILE")
-    if kill -0 "$PID" 2>/dev/null; then
-      echo "Stopping watcher PID $PID"
-      kill "$PID"
+    local pid
+    pid="$(cat "$WATCHER_PID_FILE")"
+    if kill -0 "$pid" 2>/dev/null; then
+      echo "Stopping watcher PID $pid"
+      kill "$pid"
       sleep 1
     fi
     rm -f "$WATCHER_PID_FILE"
@@ -412,45 +456,48 @@ case "$CMD" in
   start)
     echo "=== Starting project ==="
     if [ "$SKIP_DOCKER" = false ]; then
-      start_docker
+      start_docker || exit 1
     else
       echo "(跳过 Docker)"
     fi
-    start_app
+    start_app || exit 1
     if [ "$WATCHER_ENABLED" = true ]; then
-      start_watcher
+      start_watcher || exit 1
     fi
     ;;
   stop)
     echo "=== Stopping project ==="
-    stop_app
-    stop_watcher
+    stop_app || exit 1
+    stop_watcher || exit 1
     if [ "$SKIP_DOCKER" = false ]; then
-      stop_docker
+      stop_docker || exit 1
     else
       echo "(跳过 Docker)"
     fi
     ;;
   restart)
     echo "=== Restarting project ==="
-    stop_app
-    stop_watcher
+    stop_app || exit 1
+    stop_watcher || exit 1
     if [ "$SKIP_DOCKER" = false ]; then
-      stop_docker
+      stop_docker || exit 1
       sleep 1
-      start_docker
+      start_docker || exit 1
     fi
     sleep 1
-    start_app
+    start_app || exit 1
     if [ "$WATCHER_ENABLED" = true ]; then
-      start_watcher
+      start_watcher || exit 1
     fi
     ;;
   rebuild)
     echo "=== Rebuild & restart ==="
-    stop_app
-    build_jar "true"
-    start_app
+    stop_app || exit 1
+    build_jar "true" || exit 1
+    start_app || exit 1
+    if [ "$WATCHER_ENABLED" = true ]; then
+      start_watcher || exit 1
+    fi
     ;;
   status)
     status

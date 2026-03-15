@@ -3,6 +3,28 @@ const { useState, useEffect, useCallback, useRef } = React;
 const MAX_POINTS = 50000;
 const DEFAULT_DECIMALS = 4;
 const SCORE_DECIMALS = 3;
+const DEFAULT_SAMPLE_RATE_HZ = 1000;
+const CHART_LARGE_THRESHOLD = 5000;
+const WAVEFORM_PAD_RATIO = 0.08;
+const FLAT_WAVEFORM_PAD_RATIO = 0.1;
+const MIN_WAVEFORM_PAD = 0.1;
+const FFT_PERCENTILE = 0.95;
+const FFT_HEADROOM = 2.5;
+const FFT_FALLBACK_HEADROOM = 1.1;
+const CHART_THEME = Object.freeze({
+  tooltipBackground: '#fffdf8',
+  tooltipText: '#181815',
+  axisText: '#6f6253',
+  axisLine: '#c9b79f',
+  splitLine: '#ece5da',
+  zoomBorder: '#d8c7b1',
+  waveform: '#c6613f',
+  waveformZoom: 'rgba(198, 97, 63, 0.16)',
+  fft: '#8b5e3c',
+  fftZoom: 'rgba(139, 94, 60, 0.16)',
+  fftArea: 'rgba(139, 94, 60, 0.10)',
+  marker: '#b53333',
+});
 
 // ── Helpers ──
 async function api(url) {
@@ -76,6 +98,154 @@ function fmtRelatedChannels(value) {
 function fmtWindow(start, end) {
   if (!start && !end) return '—';
   return `${fmtDt(start)} ~ ${fmtDt(end)}`;
+}
+
+function buildTooltip(borderColor, formatter) {
+  return {
+    trigger: 'axis',
+    backgroundColor: CHART_THEME.tooltipBackground,
+    borderColor,
+    textStyle: { color: CHART_THEME.tooltipText, fontSize: 13 },
+    formatter,
+  };
+}
+
+function formatTimeAxis(value) {
+  const s = String(value);
+  const t = s.includes('T') ? s.split('T')[1] : s;
+  return t.substring(0, 12);
+}
+
+function buildWaveformYAxis(channelName, values) {
+  let min = Math.min(...values);
+  let max = Math.max(...values);
+  const range = max - min;
+  const pad = range > 0 ? range * WAVEFORM_PAD_RATIO : Math.abs(max) * FLAT_WAVEFORM_PAD_RATIO || MIN_WAVEFORM_PAD;
+  min -= pad;
+  max += pad;
+  return {
+    type: 'value',
+    name: channelName,
+    min: +min.toPrecision(6),
+    max: +max.toPrecision(6),
+    nameTextStyle: { fontSize: 12, color: CHART_THEME.axisText },
+    axisLabel: { fontSize: 11, color: CHART_THEME.axisText },
+    axisLine: { lineStyle: { color: CHART_THEME.axisLine } },
+    splitLine: { lineStyle: { color: CHART_THEME.splitLine } },
+  };
+}
+
+function buildFftYAxis(values) {
+  const sorted = [...values].sort((a, b) => a - b);
+  const p95 = sorted[Math.floor(sorted.length * FFT_PERCENTILE)] || 0;
+  const max = Math.max(...values);
+  const yMax = p95 > 0 ? p95 * FFT_HEADROOM : max * FFT_FALLBACK_HEADROOM;
+  return {
+    type: 'value',
+    name: '幅值',
+    max: +yMax.toPrecision(4),
+    nameTextStyle: { fontSize: 12, color: CHART_THEME.axisText },
+    axisLabel: { fontSize: 11, color: CHART_THEME.axisText },
+    axisLine: { lineStyle: { color: CHART_THEME.axisLine } },
+    splitLine: { lineStyle: { color: CHART_THEME.splitLine } },
+  };
+}
+
+function buildWaveformOption(times, values, channelName, eventIso) {
+  const markLine = eventIso
+    ? {
+        silent: true,
+        symbol: 'none',
+        lineStyle: { color: CHART_THEME.marker, width: 1.5, type: 'dashed' },
+        data: [{ xAxis: eventIso }],
+      }
+    : undefined;
+  return {
+    tooltip: buildTooltip(CHART_THEME.waveform, params => {
+      const point = params[0];
+      if (!point) return '';
+      return `时间: ${point.axisValue}<br/>数值: ${Number(point.value).toFixed(6)}`;
+    }),
+    grid: { top: 40, right: 30, bottom: 80, left: 70 },
+    xAxis: {
+      type: 'category',
+      data: times,
+      axisLabel: { fontSize: 11, color: CHART_THEME.axisText, formatter: formatTimeAxis },
+      axisLine: { lineStyle: { color: CHART_THEME.axisLine } },
+      splitLine: { show: true, lineStyle: { color: CHART_THEME.splitLine } },
+    },
+    yAxis: buildWaveformYAxis(channelName, values),
+    dataZoom: [
+      {
+        type: 'slider',
+        height: 28,
+        bottom: 10,
+        borderColor: CHART_THEME.zoomBorder,
+        fillerColor: CHART_THEME.waveformZoom,
+        handleStyle: { color: CHART_THEME.waveform },
+        textStyle: { fontSize: 11, color: CHART_THEME.axisText },
+      },
+      { type: 'inside' },
+    ],
+    series: [{
+      type: 'line',
+      data: values,
+      symbol: 'none',
+      lineStyle: { width: 1.2, color: CHART_THEME.waveform },
+      markLine,
+      large: true,
+      largeThreshold: CHART_LARGE_THRESHOLD,
+    }],
+    animation: false,
+  };
+}
+
+function buildFftOption(freqs, magnitudes) {
+  return {
+    tooltip: buildTooltip(CHART_THEME.fft, params => {
+      const point = params[0];
+      if (!point) return '';
+      return `频率: ${Number(point.axisValue).toFixed(1)} Hz<br/>幅值: ${Number(point.value).toFixed(6)}`;
+    }),
+    grid: { top: 40, right: 30, bottom: 50, left: 70 },
+    xAxis: {
+      type: 'category',
+      data: freqs.map(freq => freq.toFixed(1)),
+      name: '频率 (Hz)',
+      nameLocation: 'center',
+      nameGap: 30,
+      nameTextStyle: { fontSize: 12, color: CHART_THEME.axisText },
+      axisLabel: {
+        fontSize: 10,
+        color: CHART_THEME.axisText,
+        rotate: 0,
+        interval: Math.max(0, Math.floor(freqs.length / 10) - 1),
+      },
+      axisLine: { lineStyle: { color: CHART_THEME.axisLine } },
+    },
+    yAxis: buildFftYAxis(magnitudes),
+    dataZoom: [
+      {
+        type: 'slider',
+        height: 20,
+        bottom: 4,
+        borderColor: CHART_THEME.zoomBorder,
+        fillerColor: CHART_THEME.fftZoom,
+        handleStyle: { color: CHART_THEME.fft },
+      },
+      { type: 'inside' },
+    ],
+    series: [{
+      type: 'line',
+      data: magnitudes,
+      symbol: 'none',
+      lineStyle: { width: 1, color: CHART_THEME.fft },
+      areaStyle: { color: CHART_THEME.fftArea },
+      large: true,
+      largeThreshold: CHART_LARGE_THRESHOLD,
+    }],
+    animation: false,
+  };
 }
 
 const DetailItem = ({ label, children, highlight }) => (
@@ -429,71 +599,7 @@ const App = () => {
     // Waveform chart
     const wChart = getOrCreateChart(waveChartRef, waveInstanceRef);
     if (wChart) {
-      const markLine = eventIso ? {
-        silent: true, symbol: 'none',
-        lineStyle: { color: '#e53935', width: 1.5, type: 'dashed' },
-        data: [{ xAxis: eventIso }],
-      } : undefined;
-      wChart.setOption({
-        tooltip: {
-          trigger: 'axis',
-          backgroundColor: '#fff',
-          borderColor: '#1976d2',
-          textStyle: { color: '#333', fontSize: 13 },
-          formatter: params => {
-            const p = params[0];
-            if (!p) return '';
-            return `时间: ${p.axisValue}<br/>数值: ${Number(p.value).toFixed(6)}`;
-          },
-        },
-        grid: { top: 40, right: 30, bottom: 80, left: 70 },
-        xAxis: {
-          type: 'category', data: times,
-          axisLabel: {
-            fontSize: 11, color: '#666',
-            formatter: v => {
-              const s = String(v);
-              const t = s.includes('T') ? s.split('T')[1] : s;
-              return t.substring(0, 12);
-            },
-          },
-          axisLine: { lineStyle: { color: '#ccc' } },
-          splitLine: { show: true, lineStyle: { color: '#f0f0f0' } },
-        },
-        yAxis: (() => {
-          let yMin = Math.min(...vals);
-          let yMax = Math.max(...vals);
-          const range = yMax - yMin;
-          const PAD_RATIO = 0.08;
-          const pad = range > 0 ? range * PAD_RATIO : Math.abs(yMax) * 0.1 || 0.1;
-          yMin -= pad;
-          yMax += pad;
-          return {
-            type: 'value', name: chName,
-            min: +yMin.toPrecision(6),
-            max: +yMax.toPrecision(6),
-            nameTextStyle: { fontSize: 12, color: '#666' },
-            axisLabel: { fontSize: 11, color: '#666' },
-            axisLine: { lineStyle: { color: '#ccc' } },
-            splitLine: { lineStyle: { color: '#f0f0f0' } },
-          };
-        })(),
-        dataZoom: [
-          { type: 'slider', height: 28, bottom: 10, borderColor: '#ddd',
-            fillerColor: 'rgba(25,118,210,0.15)',
-            handleStyle: { color: '#1976d2' },
-            textStyle: { fontSize: 11 },
-          },
-          { type: 'inside' },
-        ],
-        series: [{
-          type: 'line', data: vals, symbol: 'none',
-          lineStyle: { width: 1.2, color: '#1976d2' },
-          markLine,
-          large: true, largeThreshold: 5000,
-        }],
-        animation: false,
-      }, true);
+      wChart.setOption(buildWaveformOption(times, vals, chName, eventIso), true);
     }
 
     // FFT chart
@@ -503,65 +609,13 @@ const App = () => {
       const t0 = new Date(times[0]).getTime();
       const t1 = new Date(times[times.length - 1]).getTime();
       const dt = (t1 - t0) / 1000; // seconds
-      const sampleRate = dt > 0 ? vals.length / dt : 1000;
+      const sampleRate = dt > 0 ? vals.length / dt : DEFAULT_SAMPLE_RATE_HZ;
       const { freqs, magnitudes } = computeFFT(vals, sampleRate);
       // Only show up to Nyquist/2 for relevance, skip DC
       const showN = Math.min(freqs.length, Math.floor(freqs.length / 2));
       const fSlice = freqs.slice(1, showN);
       const mSlice = magnitudes.slice(1, showN);
-      fChart.setOption({
-        tooltip: {
-          trigger: 'axis',
-          backgroundColor: '#fff',
-          borderColor: '#e67e22',
-          textStyle: { color: '#333', fontSize: 13 },
-          formatter: params => {
-            const p = params[0];
-            if (!p) return '';
-            return `频率: ${Number(p.axisValue).toFixed(1)} Hz<br/>幅值: ${Number(p.value).toFixed(6)}`;
-          },
-        },
-        grid: { top: 40, right: 30, bottom: 50, left: 70 },
-        xAxis: {
-          type: 'category', data: fSlice.map(f => f.toFixed(1)),
-          name: '频率 (Hz)',
-          nameLocation: 'center', nameGap: 30,
-          nameTextStyle: { fontSize: 12, color: '#666' },
-          axisLabel: { fontSize: 10, color: '#666', rotate: 0,
-            interval: Math.max(0, Math.floor(fSlice.length / 10) - 1),
-          },
-          axisLine: { lineStyle: { color: '#ccc' } },
-        },
-        yAxis: (() => {
-          // Use P95 as Y-max so outlier peaks don't flatten everything else
-          const sorted = [...mSlice].sort((a, b) => a - b);
-          const p95 = sorted[Math.floor(sorted.length * 0.95)] || 0;
-          const mMax = Math.max(...mSlice);
-          const yMax = p95 > 0 ? p95 * 2.5 : mMax * 1.1;
-          return {
-            type: 'value', name: '幅值',
-            max: +yMax.toPrecision(4),
-            nameTextStyle: { fontSize: 12, color: '#666' },
-            axisLabel: { fontSize: 11, color: '#666' },
-            axisLine: { lineStyle: { color: '#ccc' } },
-            splitLine: { lineStyle: { color: '#f0f0f0' } },
-          };
-        })(),
-        dataZoom: [
-          { type: 'slider', height: 20, bottom: 4, borderColor: '#ddd',
-            fillerColor: 'rgba(230,126,34,0.15)',
-            handleStyle: { color: '#e67e22' },
-          },
-          { type: 'inside' },
-        ],
-        series: [{
-          type: 'line', data: mSlice, symbol: 'none',
-          lineStyle: { width: 1, color: '#e67e22' },
-          areaStyle: { color: 'rgba(230,126,34,0.08)' },
-          large: true, largeThreshold: 5000,
-        }],
-        animation: false,
-      }, true);
+      fChart.setOption(buildFftOption(fSlice, mSlice), true);
     }
   };
 
